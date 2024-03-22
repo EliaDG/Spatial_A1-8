@@ -10,6 +10,7 @@ p_load("tidyverse",
        "viridis",
        "mapproj",
        "ggthemes",
-       "patchwork")
+       "patchwork",
+       "ggrepel")
 
 

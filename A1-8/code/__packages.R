@@ -11,6 +11,9 @@ p_load("tidyverse",
        "mapproj",
        "ggthemes",
        "patchwork",
-       "ggrepel")
+       "ggrepel",
+       "spDataLarge")
 
+
+#install.packages("spDataLarge", repos = "https://geocompr.r-universe.dev")
 

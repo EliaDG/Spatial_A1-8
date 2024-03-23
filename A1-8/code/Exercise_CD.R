@@ -10,26 +10,25 @@ getwd()
 # script_path2 <- file.path(script_folder, script_name2)
 # file.create(script_path1); file.create(script_path2)
 
-# TO DO -----------------------------------------------------------------------
+# TO DO ------------------------------------------------------------------------
 # Check satisfaction with visualizations
 
-# HEADER --------------------------------------------------------------------
+# HEADER -----------------------------------------------------------------------
 
 # Assignement 1 - Elia's part
 
-# SOURCING ----------------------------------------------------------------- 
+# SOURCING --------------------------------------------------------------------- 
 
 source("./code/__packages.R")
 #source("./code/__functions.R")
 
-# Excercise C ------
-## 1.C) -----
+# Excercise C ------------------------------------------------------------------
+## 1.C) ------------------------------------------------------------------------
 türkiye <- get_eurostat_geospatial(
   resolution = "01",
   nuts_level = 2,
   year = 2021,
-  country = "TR"
-)
+  country = "TR")
 
 #Projection information
 türkiye$geometry
@@ -57,7 +56,7 @@ combined_plot <- plot_türkiye + plot_eqearth + plot_laea +
   labs(caption="Source: Eurostat")
 combined_plot
 
-## 2.C) -------
+## 2.C) ------------------------------------------------------------------------
 # tgs00111 (Nights spent at tourist accommodation establishments by NUTS 2 regions)
 data_night <- get_eurostat("tgs00111",
                    time_format = "raw",
@@ -145,7 +144,7 @@ TR_plot_2 <- ggplot(data_night) +
 #                                             draw.ulim = T,
 #                                             title.position="top"))
 
-## 3.C) -----
+## 3.C) ------------------------------------------------------------------------
 'There are two conceptually different ways to store visualizations: raster-based and vector-based formats. 
 1. **Raster-Based Formats**:
    - **Examples**: PNG, JPEG
@@ -165,14 +164,14 @@ TR_plot_2 <- ggplot(data_night) +
    and illustrations where scalability and high-quality printing are important. 
    They are commonly used for logos, maps, and diagrams.
 
-For storing visualizations generated using R and ggplot2, a vector-based format such as SVG (Scalable Vector Graphics) 
-or PDF (Portable Document Format) is more appropriate. 
+For storing visualizations generated using R and ggplot2, a vector-based format 
+such as SVG (Scalable Vector Graphics) or PDF (Portable Document Format) is more appropriate. 
 This is because ggplot2 generates vector graphics by default, making it easy to save plots
 in formats that retain their quality when scaled or printed. SVG is especially useful for
 web-based graphics and interactive visualizations, while PDF is suitable for high-quality 
 printing and sharing across platforms.
 
-Example code to save a ggplot2 plot in SVG format:
+Example code to save a ggplot2 plot in SVG/PNG format:
 
 ```r
 # Save the plot as PNG
@@ -184,9 +183,54 @@ ggsave("TR_plot_2.svg", plot = TR_plot_2, device = "svg")
 '
 
 
-# Excercise D ---------
-## 1.D) -------
+# Exercise D -------------------------------------------------------------------
+## 1.D) ------------------------------------------------------------------------
+glimpse(pol_pres15)
 
-## 2.D) -------
+df <- pol_pres15 %>% 
+  mutate(Winner = factor(ifelse(II_Duda_share > 0.5, 1, 0), levels = c(1, 0), labels = c("Duda", "Komorowski")),
+         Majority_votes_brkdwn =ifelse(II_Duda_share > 0.5, II_Duda_share, II_Komorowski_share))
 
-## 3.D) -------
+ggplot(df) +
+  geom_sf(aes(fill = Majority_votes_brkdwn, color = Winner, geometry = geometry)) +
+  theme_map() +
+  labs(x = NULL, y = NULL,
+       title = "2015 Polish Presidential Election: Duda vs. Komorowski",
+       subtitle = "Poland - Municipality Level",
+       caption = "Source: ") +
+  theme(legend.position = "bottom") +
+  scale_fill_viridis(option = "plasma")
+
+PL_plot_1 <- ggplot(df) +
+  geom_sf(aes(fill = Winner, alpha = Majority_votes_brkdwn, geometry = geometry)) +
+  scale_fill_manual(values = c("Duda" = "red", "Komorowski" = "blue")) +
+  scale_alpha(range = c(0.4, 1), guide = "none") +
+  theme_map() +
+  labs(x = NULL, y = NULL,
+       title = "2015 Polish Presidential Election: Duda vs. Komorowski",
+       subtitle = "Poland - Municipality Level",
+       caption = "Source: PKW") +
+  guides(fill=guide_legend(title = "Winner:"))
+
+## 2.D) ------------------------------------------------------------------------
+glimpse(pol_pres15)
+
+data <- pol_pres15 %>% 
+  mutate(II_share_no_answer = (II_voters_sent_postal_voting_package - II_postal_voting_envelopes_received)/ II_voters_sent_postal_voting_package)
+
+ggplot(data) +
+  geom_sf(aes(fill = II_share_no_answer)) +
+  theme_map() +
+  labs(x = NULL, y = NULL,
+       title = "2015 Polish Presidential Election: investigation",
+       subtitle = "Poland - Municipality Level",
+       caption = "Source: PKW") +
+  scale_fill_viridis(option = "plasma")
+
+## 3.D) ------------------------------------------------------------------------
+tm_shape(pol_pres15) + tm_facets(free.scales = FALSE) +
+  tm_borders(lwd = 0.5, alpha = 0.4) + tm_fill("types")
+
+
+
+

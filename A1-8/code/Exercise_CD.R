@@ -182,7 +182,6 @@ ggsave("TR_plot_2.svg", plot = TR_plot_2, device = "svg")
 ```
 '
 
-
 # Exercise D -------------------------------------------------------------------
 ## 1.D) ------------------------------------------------------------------------
 glimpse(pol_pres15)
@@ -191,20 +190,10 @@ df <- pol_pres15 %>%
   mutate(Winner = factor(ifelse(II_Duda_share > 0.5, 1, 0), levels = c(1, 0), labels = c("Duda", "Komorowski")),
          Majority_votes_brkdwn =ifelse(II_Duda_share > 0.5, II_Duda_share, II_Komorowski_share))
 
-ggplot(df) +
-  geom_sf(aes(fill = Majority_votes_brkdwn, color = Winner, geometry = geometry)) +
-  theme_map() +
-  labs(x = NULL, y = NULL,
-       title = "2015 Polish Presidential Election: Duda vs. Komorowski",
-       subtitle = "Poland - Municipality Level",
-       caption = "Source: ") +
-  theme(legend.position = "bottom") +
-  scale_fill_viridis(option = "plasma")
-
 PL_plot_1 <- ggplot(df) +
   geom_sf(aes(fill = Winner, alpha = Majority_votes_brkdwn, geometry = geometry)) +
   scale_fill_manual(values = c("Duda" = "red", "Komorowski" = "blue")) +
-  scale_alpha(range = c(0.4, 1), guide = "none") +
+  scale_alpha(range = c(0.2, 1), guide = "none") +
   theme_map() +
   labs(x = NULL, y = NULL,
        title = "2015 Polish Presidential Election: Duda vs. Komorowski",
@@ -212,25 +201,53 @@ PL_plot_1 <- ggplot(df) +
        caption = "Source: PKW") +
   guides(fill=guide_legend(title = "Winner:"))
 
-## 2.D) ------------------------------------------------------------------------
-glimpse(pol_pres15)
+PL_plot_1
 
-data <- pol_pres15 %>% 
-  mutate(II_share_no_answer = (II_voters_sent_postal_voting_package - II_postal_voting_envelopes_received)/ II_voters_sent_postal_voting_package)
+## 2.D) ------------------------------------------------------------------------
+glimpse(data)
+
+data <- pol_pres15 %>%
+  select(1,4,6, 13:19,21,22, 44:50,52,53) %>%
+  mutate(I_share_no_answer = (I_voters_sent_postal_voting_package - I_postal_voting_envelopes_received)/I_voters_sent_postal_voting_package,
+         I_share_pve_invalid = I_invalid_voting_papers/I_postal_voting_envelopes_received,
+         II_share_no_answer = (II_voters_sent_postal_voting_package - II_postal_voting_envelopes_received)/II_voters_sent_postal_voting_package,
+         II_share_pve_invalid = II_invalid_voting_papers / II_postal_voting_envelopes_received,
+         tot_share_no_answer = (I_voters_sent_postal_voting_package + II_voters_sent_postal_voting_package - I_postal_voting_envelopes_received - II_postal_voting_envelopes_received)/(I_voters_sent_postal_voting_package + II_voters_sent_postal_voting_package),
+         tot_share_pve_invalid = (I_invalid_voting_papers + II_invalid_voting_papers)/(I_postal_voting_envelopes_received + II_postal_voting_envelopes_received)) %>%
+  mutate(across(where(is.numeric), ~ replace(., is.infinite(.) | is.nan(.), 0)))
 
 ggplot(data) +
-  geom_sf(aes(fill = II_share_no_answer)) +
+  geom_sf(aes(fill =  tot_share_pve_invalid)) +
   theme_map() +
   labs(x = NULL, y = NULL,
        title = "2015 Polish Presidential Election: investigation",
        subtitle = "Poland - Municipality Level",
        caption = "Source: PKW") +
-  scale_fill_viridis(option = "plasma")
+  scale_fill_viridis(option = "plasma",
+                     direction = -1)
 
 ## 3.D) ------------------------------------------------------------------------
-tm_shape(pol_pres15) + tm_facets(free.scales = FALSE) +
-  tm_borders(lwd = 0.5, alpha = 0.4) + tm_fill("types")
+ds <- pol_pres15 %>% 
+  mutate(I_share_Braun = I_Grzegorz.Michal.Braun/I_candidates_total,
+         I_share_Jarubas = I_Adam.Sebastian.Jarubas/I_candidates_total,
+         I_share_Mikke = I_Janusz.Ryszard.Korwin.Mikke/I_candidates_total,
+         I_share_Kowalski = I_Marian.Janusz.Kowalski/I_candidates_total,
+         I_share_Kukiz = I_Pawel.Piotr.Kukiz/I_candidates_total,
+         I_share_Ogorek = I_Magdalena.Agnieszka.Ogorek/I_candidates_total,
+         I_share_Palikot = I_Janusz.Marian.Palikot/I_candidates_total,
+         I_share_Tanajno = I_Pawel.Jan.Tanajno/I_candidates_total,
+         I_share_Wilk = I_Jacek.Wilk/I_candidates_total,
+         avg_turnout = (I_turnout+II_turnout)/2) %>% # only relevant transformation, the others are experiments
+  rename(I_share_Duda = I_Duda_share,
+         I_share_Komorwski = I_Komorowski_share)
 
-
-
+PL_plot_3 <- tm_shape(ds) +
+  tm_fill("avg_turnout", palette = "plasma") +
+  tm_borders(lwd = 0.5, alpha = 0.4) +
+  tm_facets(by = "types", free.scales = FALSE) +
+  tm_layout(main.title = "Average Turnout by Municipality",
+            title.position = c("center", "top"),
+            legend.text.size = 0.8) +
+  tm_credits("Source: PKW", position = "left")
+PL_plot_3
 

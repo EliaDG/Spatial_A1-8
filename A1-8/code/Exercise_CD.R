@@ -54,7 +54,7 @@ plot_laea <- ggplot() +
 combined_plot <- plot_türkiye + plot_eqearth + plot_laea +
   plot_layout(ncol = 1)+
   labs(caption="Source: Eurostat")
-combined_plot
+#need to work on overlapping trick
 
 ## 2.C) ------------------------------------------------------------------------
 # tgs00111 (Nights spent at tourist accommodation establishments by NUTS 2 regions)
@@ -85,7 +85,7 @@ TR_plot_1 <- ggplot(data_night) +
             size = 3, color = "black", nudge_y = 0.1) +
   theme_map() +
   labs(x = NULL, y = NULL,
-       title = "Tourist Overnight Stay Distribution by Origin",
+       title = "Distribution of Tourist Overnight-Stay by Origin",
        subtitle = "Turkey - NUTS2 Level",
        caption = "Source: Eurostat")+
   guides(fill = guide_legend(title = "Tourist Type:")) +
@@ -100,7 +100,7 @@ TR_plot_2 <- ggplot(data_night) +
                   box.padding = 0.5) +  # Adjust padding around labels
   theme_map() +
   labs(x = NULL, y = NULL,
-       title = "Domestic Tourist Overnight Stay Distribution",
+       title = "Distribution of Domestic Tourist Overnight-stay",
        subtitle = "Turkey - NUTS2 Level",
        caption = "Source: Eurostat") +
   theme(legend.position = "bottom") +
@@ -181,6 +181,12 @@ ggsave("TR_plot_2.png", plot = TR_plot_2, device = "png")
 ggsave("TR_plot_2.svg", plot = TR_plot_2, device = "svg")
 ```
 '
+# Final Plots Exercise C -------------------------------------------------------
+combined_plot
+TR_plot_1
+TR_plot_2
+
+
 
 # Exercise D -------------------------------------------------------------------
 ## 1.D) ------------------------------------------------------------------------
@@ -204,50 +210,91 @@ PL_plot_1 <- ggplot(df) +
 PL_plot_1
 
 ## 2.D) ------------------------------------------------------------------------
-glimpse(data)
-
+glimpse(pol_pres15)
 data <- pol_pres15 %>%
-  select(1,4,6, 13:19,21,22, 44:50,52,53) %>%
-  mutate(I_share_no_answer = (I_voters_sent_postal_voting_package - I_postal_voting_envelopes_received)/I_voters_sent_postal_voting_package,
-         I_share_pve_invalid = I_invalid_voting_papers/I_postal_voting_envelopes_received,
-         II_share_no_answer = (II_voters_sent_postal_voting_package - II_postal_voting_envelopes_received)/II_voters_sent_postal_voting_package,
-         II_share_pve_invalid = II_invalid_voting_papers / II_postal_voting_envelopes_received,
-         tot_share_no_answer = (I_voters_sent_postal_voting_package + II_voters_sent_postal_voting_package - I_postal_voting_envelopes_received - II_postal_voting_envelopes_received)/(I_voters_sent_postal_voting_package + II_voters_sent_postal_voting_package),
-         tot_share_pve_invalid = (I_invalid_voting_papers + II_invalid_voting_papers)/(I_postal_voting_envelopes_received + II_postal_voting_envelopes_received)) %>%
-  mutate(across(where(is.numeric), ~ replace(., is.infinite(.) | is.nan(.), 0)))
+  select(1,4,6, 13:19,21,22, 44:50,52,53) %>% # just to better visualize the relevant columns - to be deleted!
+  mutate(anomaly_invalid = ifelse(I_invalid_voting_papers > I_postal_voting_envelopes_received | II_invalid_voting_papers > II_postal_voting_envelopes_received, 1, 0),
+         anomaly_spelling = ifelse(I_invalid_voting_papers > 0 & I_PVE_of_which_no_declaration == 0 & I_PVE_of_which_no_signature == 0 & I_PVE_of_which_no_voting_envelope == 0 & I_PVE_of_which_voting_envelope_open == 0 |
+                                     II_invalid_voting_papers > 0 & II_PVE_of_which_no_declaration == 0 & II_PVE_of_which_no_signature == 0 & II_PVE_of_which_no_voting_envelope == 0 & II_PVE_of_which_voting_envelope_open == 0, 1, 0),
+         anomaly_count = ifelse(I_voting_envelopes_placed_in_ballot_box != I_of_which_voting_papers_taken_from_voting_envelopes | II_voting_envelopes_placed_in_ballot_box != II_of_which_voting_papers_taken_from_voting_envelopes, 1,0),
+         anomaly = ifelse(anomaly_invalid == 1 | anomaly_spelling == 1 | anomaly_count == 1, anomaly_invalid + anomaly_spelling + anomaly_count, 0)) %>% 
+  mutate(anomaly_type = case_when(
+    anomaly_invalid == 0 & anomaly_spelling == 0 & anomaly_count == 0 ~ "None",
+    anomaly_invalid == 1 & anomaly_spelling == 0 & anomaly_count == 0 ~ "Invalid Anomaly",
+    anomaly_invalid == 0 & anomaly_spelling == 1 & anomaly_count == 0 ~ "Spelling Anomaly",
+    anomaly_invalid == 0 & anomaly_spelling == 0 & anomaly_count == 1 ~ "Extraction Anomaly",
+    anomaly_invalid == 1 & anomaly_spelling == 1 & anomaly_count == 0 ~ "Invalid + Spelling Anomaly",
+    anomaly_invalid == 1 & anomaly_spelling == 0 & anomaly_count == 1 ~ "Invalid + Extraction Anomaly",
+    anomaly_invalid == 0 & anomaly_spelling == 1 & anomaly_count == 1 ~ "Extraction + Spelling Anomaly",
+    TRUE ~ "Other"
+  ))
 
-ggplot(data) +
-  geom_sf(aes(fill =  tot_share_pve_invalid)) +
-  theme_map() +
-  labs(x = NULL, y = NULL,
-       title = "2015 Polish Presidential Election: investigation",
+#excluded because not sure useful:
+# I_share_no_answer = (I_voters_sent_postal_voting_package - I_postal_voting_envelopes_received)/I_voters_sent_postal_voting_package,
+# I_share_pve_invalid = I_invalid_voting_papers/I_postal_voting_envelopes_received,
+# II_share_no_answer = (II_voters_sent_postal_voting_package - II_postal_voting_envelopes_received)/II_voters_sent_postal_voting_package,
+# II_share_pve_invalid = II_invalid_voting_papers / II_postal_voting_envelopes_received)
+# tot_share_no_answer = (I_voters_sent_postal_voting_package + II_voters_sent_postal_voting_package - I_postal_voting_envelopes_received - II_postal_voting_envelopes_received)/(I_voters_sent_postal_voting_package + II_voters_sent_postal_voting_package),
+# tot_share_pve_invalid = (I_invalid_voting_papers + II_invalid_voting_papers)/(I_postal_voting_envelopes_received + II_postal_voting_envelopes_received)) %>% 
+# mutate(across(where(is.numeric), ~ replace(., is.infinite(.) | is.nan(.), 0)))
+
+# ggplot(data) +
+#   geom_sf(aes(fill = as.factor(anomaly_type))) +
+#   theme_map() +
+#   labs(x = NULL, y = NULL,
+#        title = "2015 Polish Presidential Election: anomalies in PVE",
+#        subtitle = "Poland - Municipality Level",
+#        caption = "Source: PKW")
+
+#https://r-graph-gallery.com/330-bubble-map-with-ggplot2.html
+# Need x and y coordinates thus convert the geometry column to sf object
+data_sf <- st_as_sf(data, wkt = "geometry")
+centroid <- st_centroid(data_sf)
+data_with_centroid <- cbind(data, st_coordinates(centroid))
+
+PL_plot_2 <- ggplot(data_with_centroid) +
+  geom_sf(fill = "white") +
+  geom_point(data = subset(data_with_centroid, anomaly > 0), aes(x = X, y = Y, color = as.factor(anomaly_type), size = as.factor(anomaly)), alpha = 0.8) +
+  theme_void() +
+  labs(title = "2015 Polish Presidential Election: anomalies in PVE",
        subtitle = "Poland - Municipality Level",
-       caption = "Source: PKW") +
-  scale_fill_viridis(option = "plasma",
-                     direction = -1)
+       caption = "Data source: PKW",
+       color = "Anomaly Type:",
+       size = "Anomaly Count:")
+
 
 ## 3.D) ------------------------------------------------------------------------
-ds <- pol_pres15 %>% 
-  mutate(I_share_Braun = I_Grzegorz.Michal.Braun/I_candidates_total,
-         I_share_Jarubas = I_Adam.Sebastian.Jarubas/I_candidates_total,
-         I_share_Mikke = I_Janusz.Ryszard.Korwin.Mikke/I_candidates_total,
-         I_share_Kowalski = I_Marian.Janusz.Kowalski/I_candidates_total,
-         I_share_Kukiz = I_Pawel.Piotr.Kukiz/I_candidates_total,
-         I_share_Ogorek = I_Magdalena.Agnieszka.Ogorek/I_candidates_total,
-         I_share_Palikot = I_Janusz.Marian.Palikot/I_candidates_total,
-         I_share_Tanajno = I_Pawel.Jan.Tanajno/I_candidates_total,
-         I_share_Wilk = I_Jacek.Wilk/I_candidates_total,
-         avg_turnout = (I_turnout+II_turnout)/2) %>% # only relevant transformation, the others are experiments
-  rename(I_share_Duda = I_Duda_share,
-         I_share_Komorwski = I_Komorowski_share)
+ds <- pol_pres15 %>%
+  pivot_longer(cols = c(I_turnout, II_turnout), names_to = "election", values_to = "turnout")
+glimpse(ds)
+
+# need to understand how to group by types and color the bordes
+border_colors <- c("Rural" = "red", "Urban" = "yellow", "Urban/rural" = "green", "Warsaw Borough" = "purple")
 
 PL_plot_3 <- tm_shape(ds) +
-  tm_fill("avg_turnout", palette = "plasma") +
-  tm_borders(lwd = 0.5, alpha = 0.4) +
-  tm_facets(by = "types", free.scales = FALSE) +
-  tm_layout(main.title = "Average Turnout by Municipality",
+  tm_fill(col = "turnout", title = "Turnout Share:", palette = "plasma") +
+  tm_borders(group = as.factor("types"), alpha = 0.8) +
+  tm_facets(by = c("election"), free.scales = FALSE) +
+  tm_layout(main.title = "Turnout Comparison between I and II round",
             title.position = c("center", "top"),
-            legend.text.size = 0.8) +
+            frame = TRUE) +
   tm_credits("Source: PKW", position = "left")
-PL_plot_3
 
+#discarded draft:
+# mutate(I_share_Braun = I_Grzegorz.Michal.Braun/I_candidates_total,
+#        I_share_Jarubas = I_Adam.Sebastian.Jarubas/I_candidates_total,
+#        I_share_Mikke = I_Janusz.Ryszard.Korwin.Mikke/I_candidates_total,
+#        I_share_Kowalski = I_Marian.Janusz.Kowalski/I_candidates_total,
+#        I_share_Kukiz = I_Pawel.Piotr.Kukiz/I_candidates_total,
+#        I_share_Ogorek = I_Magdalena.Agnieszka.Ogorek/I_candidates_total,
+#        I_share_Palikot = I_Janusz.Marian.Palikot/I_candidates_total,
+#        I_share_Tanajno = I_Pawel.Jan.Tanajno/I_candidates_total,
+#        I_share_Wilk = I_Jacek.Wilk/I_candidates_total,
+#        avg_turnout = (I_turnout+II_turnout)/2) %>% # only relevant transformation, the others are experiments
+#   rename(I_share_Duda = I_Duda_share,
+#          I_share_Komorwski = I_Komorowski_share)
+
+# Final Plots Exercise D -------------------------------------------------------
+PL_plot_1
+PL_plot_2
+PL_plot_3

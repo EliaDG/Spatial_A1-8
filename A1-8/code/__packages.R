@@ -15,5 +15,5 @@ p_load("tidyverse",
        "spDataLarge")
 
 
-#install.packages("spDataLarge", repos = "https://geocompr.r-universe.dev")
+install.packages("spDataLarge", repos = "https://geocompr.r-universe.dev")
 

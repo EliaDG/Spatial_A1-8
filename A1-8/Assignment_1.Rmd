@@ -1,0 +1,23 @@
+---
+title: "Assignment 1 - Group 8"
+author: "Elia Di Gregorio and Robert Auerbach"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Set Up File
+
+Super cool trick for the R_Markdown is to have saved the workspace of your basic R_file somewhere in the project and then load it directly. In this way you have all the necessary objects and plots from that basic R_file, within your R_Markdown_file, too. There is no need to repeat and rerun the code to plot something. You can just "call" it :)
+
+```{r}
+load("./WS_CD.RData")
+```
+
+```{r}
+TR_plot_2
+```
+bla bla the actual text will follow ...

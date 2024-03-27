@@ -106,10 +106,15 @@ degree_table
 
 ##### Exercise B.2.1: How would centralities change if you considered a row-normalized network instead?
 # Compute row sums for normalization
+adj_matrix <- as.data.frame(adj_matrix)
 row_sums <- rowSums(adj_matrix)
+
+
 
 # Normalize the adjacency matrix
 w <- adj_matrix / row_sums
+
+w[is.na(w)] <- 0
 
 print(w)
 
@@ -146,10 +151,8 @@ sum_row <- function(matrix_data, row_name) {
 }
 
 
-
 id <- cbind(sum_column(w, "A"),sum_column(w, "B"),sum_column(w, "C"),sum_column(w, "D"),sum_column(w, "E"),sum_column(w, "F"))
 od <- cbind(sum_row(w, "A"),sum_row(w, "B"),sum_row(w, "C"),sum_row(w, "D"),sum_row(w, "E"),sum_row(w, "F"))
-
 
 
 degree_table <- rbind(id, od)

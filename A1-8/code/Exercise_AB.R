@@ -267,7 +267,7 @@ centrality_data <- data.frame(
 # Print the centrality data
 print(centrality_data)
 
-Interpretation
+#Interpretation
 
 # Degree Centrality:
   # - Node A and Node B have a degree centrality of 3, indicating that they are connected to 3 other nodes in the network.

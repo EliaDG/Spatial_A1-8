@@ -88,10 +88,21 @@ degree_table
 
 B.2.1: How would centrality change if you considered a row-normalized network instead?
 
-
+We calculate the sums of each row of the adjacency matrix and then divide the addjacency matrix by the row sums.
+Again, we compute the centrality measures of in- and out-degree. As expected (based on the slides) the out-degree of the agents are equalized to 1. Also, the most central buyers are now B and D instead of B and C. Clearly the row-normalization leads to a distortion.
 ```{r}
-degree_table
+degree_table_norm
 ```
+
+B.2.2: How would the network change if you removed or added a specific agent?
+We removed agent "F" and repeated the steps from above.
+```{r}
+plot(g1, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
+reciprocity(g1)
+transitivity(g1)
+```
+
+
 
 ## Exercise C
 

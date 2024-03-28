@@ -78,6 +78,8 @@ plot(g, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
 # Get the adjacency matrix
 adj_matrix <- as_adjacency_matrix(g)
 
+
+
 # Convert the row names and column names to node labels
 rownames(adj_matrix) <- V(g)$name
 colnames(adj_matrix) <- V(g)$name
@@ -103,8 +105,8 @@ degree_table <- rbind(id, od)
 colnames(degree_table) <- c("A","B","C","D","E","F")
 rownames(degree_table) <- c("In", "Out")
 
-reciprocity(g)
-transitivity(g)
+rec_g <- reciprocity(g)
+trans_g <- transitivity(g)
 
 degree_table
 
@@ -116,7 +118,7 @@ degree_table
 ##### Exercise B.2.1: How would centralities change if you considered a row-normalized network instead?
 # Compute row sums for normalization
 adj_matrix <- as.data.frame(adj_matrix)
-row_sums <- rowSums(adj_matrix)
+row_sums <- rowSums(adj_matrix, dims = 1)
 
 # Normalize the adjacency matrix
 w <- adj_matrix / row_sums
@@ -192,6 +194,19 @@ colnames(adj_matrix) <- V(g1)$name
 
 # Print the adjacency matrix
 print(adj_matrix)
+
+rec_g1 <- reciprocity(g1)
+trans_g1 <- transitivity(g1)
+
+rec <- cbind(rec_g,rec_g1)
+trans <- cbind(trans_g, trans_g1)
+
+rectrans_table <- rbind(rec, trans)
+
+colnames(rectrans_table) <- c("Network Complete","Network Removed")
+rownames(rectrans_table) <- c("Reciprocity", "Transivity")
+
+rectrans_table
 
 ##### continue here with analysis from above and how reciprocity changes
 

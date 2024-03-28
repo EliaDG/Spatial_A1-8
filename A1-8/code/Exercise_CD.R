@@ -4,25 +4,21 @@ getwd()
 # dir.create("code")
 # 
 # script_folder <- "code"
-# script_name1 <- "__packages.R"
-# script_name2 <- "__functions.R"
-# script_path1 <- file.path(script_folder, script_name1)
-# script_path2 <- file.path(script_folder, script_name2)
-# file.create(script_path1); file.create(script_path2)
+# script_name <- "__packages.R"
+# script_path1 <- file.path(script_folder, script_name)
+# file.create(script_path)
 
 # TO DO ------------------------------------------------------------------------
-# Check satisfaction with visualizations
 
 # HEADER -----------------------------------------------------------------------
 
-# Assignement 1 - Elia's part
+# Assignment 1
 
 # SOURCING --------------------------------------------------------------------- 
 
 source("./code/__packages.R")
-#source("./code/__functions.R")
 
-# Excercise C ------------------------------------------------------------------
+# Exercise C ------------------------------------------------------------------
 ## 1.C) ------------------------------------------------------------------------
 türkiye <- get_eurostat_geospatial(
   resolution = "01",
@@ -54,7 +50,6 @@ plot_laea <- ggplot() +
 combined_plot <- plot_türkiye + plot_eqearth + plot_laea +
   plot_layout(ncol = 1)+
   labs(caption="Source: Eurostat")
-#need to work on overlapping trick
 
 ## 2.C) ------------------------------------------------------------------------
 # tgs00111 (Nights spent at tourist accommodation establishments by NUTS 2 regions)
@@ -66,7 +61,7 @@ data_night <- get_eurostat("tgs00111",
   filter(grepl("^TR.*", geo)) %>%
   merge(., türkiye, by = "geo") %>% 
   pivot_wider(., names_from = c_resid, values_from = values) %>% 
-  select(-c(2:10,12:15)) %>% 
+  select(-c(2:10, 12:15)) %>% 
   mutate(DOM_SHARE = DOM/TOTAL,
          FOR_SHARE = FOR/TOTAL,
          TURIST = factor(ifelse(DOM_SHARE > 0.5, 0, 1), levels = c(1, 0), labels = c("Foreign Tourist", "Domestic Tourist")))
@@ -97,7 +92,8 @@ TR_plot_2 <- ggplot(data_night) +
   geom_text_repel(data = data_night[data_night$DOM_SHARE > 0.9, ],
                   aes(x = x, y = y, label = NUTS_NAME),
                   size = 3, color = "black", nudge_y = 0.1,
-                  box.padding = 0.5) +  # Adjust padding around labels
+                  box.padding = 0.5,
+                  arrow = arrow(length = unit(0.75, "mm") , ends = "last", type = "closed")) +
   theme_map() +
   labs(x = NULL, y = NULL,
        title = "Distribution of Domestic Tourist Overnight-stay",
@@ -113,79 +109,13 @@ TR_plot_2 <- ggplot(data_night) +
                                             draw.ulim = TRUE,
                                             title.position = "top"))
 
-
-# Alternatively:
-# tour_occ_anor2 (Net occupancy rate of bed-places in hotels and similar accommodation (NACE Rev. 2 activity I55.1) by NUTS 2 regions)
-# glimpse(data_night)
-# data_bedh <- get_eurostat("tour_occ_anor2",
-#                        time_format = "raw",
-#                        filters = list(
-#                          TIME_PERIOD = "2022"
-#                        ))%>% 
-#   filter(grepl("^TR.*", geo)) %>% 
-#   select(-c(1,3)) %>% 
-#   merge(., türkiye, by = "geo")%>% 
-#   filter(accomunit == "BEDPL")
-# 
-# ggplot(data_bedh) +
-#   geom_sf(aes(fill = values, geometry = geometry)) +  # Specify the geometry aesthetic
-#   theme_map() +
-#   labs(x = NULL, y = NULL,
-#        title = "Net occupancy rate of bed-places in hotels",
-#        subtitle = "Turkey - NUTS2 Level",
-#        caption = "Source: Eurostat") +
-#   theme(legend.position = "bottom") +
-#   scale_fill_viridis(option = "magma",
-#                      direction = -1, 
-#                      name = "Occupacy Rate",
-#                      guide = guide_colorbar(direction="horizontal", 
-#                                             barheight = unit(2, units= "mm"),
-#                                             barwidth = unit(30, units= "mm"),
-#                                             draw.ulim = T,
-#                                             title.position="top"))
-
 ## 3.C) ------------------------------------------------------------------------
-'There are two conceptually different ways to store visualizations: raster-based and vector-based formats. 
-1. **Raster-Based Formats**:
-   - **Examples**: PNG, JPEG
-   - **Description**: Raster graphics store image data as a grid of pixels, 
-   where each pixel contains color information. They are resolution-dependent, 
-   meaning they can lose quality when scaled up.
-   - **Appropriate for**: Visualizations with complex color gradients, photographs, 
-   and detailed images where pixel-level accuracy is essential. 
-   They are commonly used for web graphics and photographs.
+#Raster-based or Vector-based, see R_mardown file
 
-2. **Vector-Based Formats**:
-   - **Examples**: SVG, PDF
-   - **Description**: Vector graphics store image data using mathematical formulas
-   to define shapes, lines, and colors. They are resolution-independent, meaning 
-   they can be scaled without losing quality.
-   - **Appropriate for**: Visualizations with geometric shapes, charts, maps, 
-   and illustrations where scalability and high-quality printing are important. 
-   They are commonly used for logos, maps, and diagrams.
-
-For storing visualizations generated using R and ggplot2, a vector-based format 
-such as SVG (Scalable Vector Graphics) or PDF (Portable Document Format) is more appropriate. 
-This is because ggplot2 generates vector graphics by default, making it easy to save plots
-in formats that retain their quality when scaled or printed. SVG is especially useful for
-web-based graphics and interactive visualizations, while PDF is suitable for high-quality 
-printing and sharing across platforms.
-
-Example code to save a ggplot2 plot in SVG/PNG format:
-
-```r
-# Save the plot as PNG
-ggsave("TR_plot_2.png", plot = TR_plot_2, device = "png")
-
-# Save the plot as SVG
-ggsave("TR_plot_2.svg", plot = TR_plot_2, device = "svg")
-```
-'
 # Final Plots Exercise C -------------------------------------------------------
 combined_plot
 TR_plot_1
 TR_plot_2
-
 
 
 # Exercise D -------------------------------------------------------------------
@@ -205,14 +135,16 @@ PL_plot_1 <- ggplot(df) +
        title = "2015 Polish Presidential Election: Duda vs. Komorowski",
        subtitle = "Poland - Municipality Level",
        caption = "Source: PKW") +
-  guides(fill=guide_legend(title = "Winner:"))
-
-PL_plot_1
+  guides(fill=guide_legend(title = "Winner:")) +
+  theme(
+    plot.title = element_text(size = 16, face = "bold"),
+    plot.subtitle = element_text(size = 14),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12))
 
 ## 2.D) ------------------------------------------------------------------------
-glimpse(pol_pres15)
 data <- pol_pres15 %>%
-  select(1,4,6, 13:19,21,22, 44:50,52,53) %>% # just to better visualize the relevant columns - to be deleted!
+  select(1,4,6, 13:19,21,22, 44:50,52,53) %>% # just to better visualize the relevant columns
   mutate(anomaly_invalid = ifelse(I_invalid_voting_papers > I_postal_voting_envelopes_received | II_invalid_voting_papers > II_postal_voting_envelopes_received, 1, 0),
          anomaly_spelling = ifelse(I_invalid_voting_papers > 0 & I_PVE_of_which_no_declaration == 0 & I_PVE_of_which_no_signature == 0 & I_PVE_of_which_no_voting_envelope == 0 & I_PVE_of_which_voting_envelope_open == 0 |
                                      II_invalid_voting_papers > 0 & II_PVE_of_which_no_declaration == 0 & II_PVE_of_which_no_signature == 0 & II_PVE_of_which_no_voting_envelope == 0 & II_PVE_of_which_voting_envelope_open == 0, 1, 0),
@@ -229,24 +161,7 @@ data <- pol_pres15 %>%
     TRUE ~ "Other"
   ))
 
-#excluded because not sure useful:
-# I_share_no_answer = (I_voters_sent_postal_voting_package - I_postal_voting_envelopes_received)/I_voters_sent_postal_voting_package,
-# I_share_pve_invalid = I_invalid_voting_papers/I_postal_voting_envelopes_received,
-# II_share_no_answer = (II_voters_sent_postal_voting_package - II_postal_voting_envelopes_received)/II_voters_sent_postal_voting_package,
-# II_share_pve_invalid = II_invalid_voting_papers / II_postal_voting_envelopes_received)
-# tot_share_no_answer = (I_voters_sent_postal_voting_package + II_voters_sent_postal_voting_package - I_postal_voting_envelopes_received - II_postal_voting_envelopes_received)/(I_voters_sent_postal_voting_package + II_voters_sent_postal_voting_package),
-# tot_share_pve_invalid = (I_invalid_voting_papers + II_invalid_voting_papers)/(I_postal_voting_envelopes_received + II_postal_voting_envelopes_received)) %>% 
-# mutate(across(where(is.numeric), ~ replace(., is.infinite(.) | is.nan(.), 0)))
-
-# ggplot(data) +
-#   geom_sf(aes(fill = as.factor(anomaly_type))) +
-#   theme_map() +
-#   labs(x = NULL, y = NULL,
-#        title = "2015 Polish Presidential Election: anomalies in PVE",
-#        subtitle = "Poland - Municipality Level",
-#        caption = "Source: PKW")
-
-#https://r-graph-gallery.com/330-bubble-map-with-ggplot2.html
+# Bubble plot: https://r-graph-gallery.com/330-bubble-map-with-ggplot2.html
 # Need x and y coordinates thus convert the geometry column to sf object
 data_sf <- st_as_sf(data, wkt = "geometry")
 centroid <- st_centroid(data_sf)
@@ -260,39 +175,28 @@ PL_plot_2 <- ggplot(data_with_centroid) +
        subtitle = "Poland - Municipality Level",
        caption = "Data source: PKW",
        color = "Anomaly Type:",
-       size = "Anomaly Count:")
-
+       size = "Anomaly Count:") +
+  theme(
+    plot.title = element_text(size = 16, face = "bold"),
+    plot.subtitle = element_text(size = 14),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12))
 
 ## 3.D) ------------------------------------------------------------------------
 ds <- pol_pres15 %>%
   pivot_longer(cols = c(I_turnout, II_turnout), names_to = "election", values_to = "turnout")
-glimpse(ds)
 
-# need to understand how to group by types and color the bordes
+#attempt to customize palette for borders
 border_colors <- c("Rural" = "red", "Urban" = "yellow", "Urban/rural" = "green", "Warsaw Borough" = "purple")
 
 PL_plot_3 <- tm_shape(ds) +
-  tm_fill(col = "turnout", title = "Turnout Share:", palette = "plasma") +
-  tm_borders(group = as.factor("types"), alpha = 0.8) +
+  tm_fill(col = "turnout", title = "Turnout Share:", palette = "plasma" ) +
+  tm_borders(group = ds$types, alpha = 0.8) +
   tm_facets(by = c("election"), free.scales = FALSE) +
   tm_layout(main.title = "Turnout Comparison between I and II round",
             title.position = c("center", "top"),
             frame = TRUE) +
   tm_credits("Source: PKW", position = "left")
-
-#discarded draft:
-# mutate(I_share_Braun = I_Grzegorz.Michal.Braun/I_candidates_total,
-#        I_share_Jarubas = I_Adam.Sebastian.Jarubas/I_candidates_total,
-#        I_share_Mikke = I_Janusz.Ryszard.Korwin.Mikke/I_candidates_total,
-#        I_share_Kowalski = I_Marian.Janusz.Kowalski/I_candidates_total,
-#        I_share_Kukiz = I_Pawel.Piotr.Kukiz/I_candidates_total,
-#        I_share_Ogorek = I_Magdalena.Agnieszka.Ogorek/I_candidates_total,
-#        I_share_Palikot = I_Janusz.Marian.Palikot/I_candidates_total,
-#        I_share_Tanajno = I_Pawel.Jan.Tanajno/I_candidates_total,
-#        I_share_Wilk = I_Jacek.Wilk/I_candidates_total,
-#        avg_turnout = (I_turnout+II_turnout)/2) %>% # only relevant transformation, the others are experiments
-#   rename(I_share_Duda = I_Duda_share,
-#          I_share_Komorwski = I_Komorowski_share)
 
 # Final Plots Exercise D -------------------------------------------------------
 PL_plot_1

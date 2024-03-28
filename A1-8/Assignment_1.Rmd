@@ -1,0 +1,66 @@
+---
+title: "Assignment 1 - Group 8"
+author: "Elia Di Gregorio and Robert Auerbach"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Quick note
+
+Super cool trick for the R_Markdown is to have saved the workspace of your basic R_file somewhere in the project and then load it directly. In this way you have all the necessary objects and plots from that basic R_file, within your R_Markdown_file, too. There is no need to repeat and rerun the code to plot something. You can just "call" it :)
+
+```{r}
+source("./code/__packages.R")
+load("./WS_CD.RData")
+```
+
+```{r}
+TR_plot_2
+```
+## Exercise C
+
+In this exercise, we will work with spatial projections of Türkiye's NUTS-2 regions. Despite not being a member of the European Union, Türkiye has adopted the Nomenclature of Territorial Units for Statistics (NUTS) since 2002. The country counts 26 subregions, and we accessed its spatial data directly from the [GISCO](https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/nuts) source via `get_eurostat_spatial()` function. By default this function loads the EPSG-4326 projection of the map, corresponding to the World Geodetic System 1984 ensemble (WGS84). It is based on a geocentric datum, meaning it defines the Earth's shape as an ellipsoid (a flattened sphere) rather than a perfect sphere.
+
+```{r}
+st_crs(türkiye)
+```
+To use another projection and/or CRS we employed the `st_transform()` function and recurred to the Equal Earth Projection and to the Lambert Azimuthal Equal Area Projection. Both preserve the relative sizes of areas on the Earth's surface. This means that areas on the map are represented accurately in relation to each other in terms of size, making it suitable for thematic mapping and spatial analysis. However the former is classified as a pseudo-cylindrical projection because it projects the Earth's surface onto a cylinder and then unwraps the cylinder to form a rectangular map, whereas the latter projects the Earth's surface onto a plane tangent to a specific point (the center of the projection).
+The difference in projections is highlighted by the following map:
+
+```{r}
+plot(combined_plot)
+```
+For the second part of the Exercise we decided to use the dataset `tgs00111`: Nights spent at tourist accommodation establishments by NUTS 2 regions ([here](<https://ec.europa.eu/eurostat/cache/metadata/en/tour_occ_esms.htm) the Metadata for consultation). The dataset covers internal tourism, in other words tourism flows within the country (domestic tourism) or from abroad to destinations in the country (inbound tourism) for the year 2022. For the sake of the exercise we further enhanced the dataset with two additional columns with the share of domestic and foreign tourist overnights (continuous scale), and one column for a factor variable based on the condition that if the domestic tourism share of overnight stay is greater than 50%, the tourist is labeled as "Domestic Tourist"; otherwise, they are labeled as "Foreign Tourist".
+
+By plotting the latter variable, we were able to group together regions based on whether the majority of overnight stay in hotels were by domestic tourists or foreign tourists.
+
+```{r}
+plot(TR_plot_1)
+```
+Not surprisingly, regions with traditional "instagrammable" destinations like Istanbul or Antalya and Burdur had a majority of foreign tourists staying overnight in hotels, while the rest of the country registered a higher domestic tourists inflow, suggesting a very limited international touristic network in Türkiye.
+
+The plot for the continuous scale variable focused more on the domestic dimension of tourism and represented the share of domestic tourist overnight stays in different Turkish regions.
+
+```{r}
+plot(TR_plot_2)
+```
+Besides stressing the point made by the previous map, this time we get more insights on the distribution of Domestic tourists in Türkiye. To further enrich the plot, we also decided to highlight the names of those 10 regions with beyond 90% of domestic tourists overnight stays.
+
+Concerning the last question of the exercise, there are two conceptually different ways to store visualizations: raster-based and vector-based formats. 
+
+Raster-based formats like PNG and JPEG store images as grids of pixels, making them suitable for complex color gradients and detailed images. However, they are resolution-dependent, which means they can lose quality when scaled up.
+
+On the other hand, vector-based formats such as SVG and PDF store image data using mathematical formulas to define shapes, lines, and colors. This makes them ideal for visualizations with geometric shapes, charts, maps, and illustrations where scalability and high-quality printing are crucial. Unlike raster formats, vector graphics are resolution-independent and can be scaled without loss of quality.
+
+For visualizations created using R and ggplot2, which inherently produce vector graphics, it is recommended to save them in vector-based formats like SVG or PDF. These formats maintain sharpness and clarity when scaled to any size, making them suitable for presentations, printing, and high-resolution displays. SVG is particularly useful for web-based graphics and interactive visualizations, while PDF is excellent for high-quality printing and cross-platform compatibility.
+
+```{r}
+# Save the plot as SVG
+#ggsave("TR_plot_2.svg", plot = TR_plot_2, device = "svg")
+```
+
+## Exercise D

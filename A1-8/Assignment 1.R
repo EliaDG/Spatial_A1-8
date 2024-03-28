@@ -109,8 +109,6 @@ degree_table
 adj_matrix <- as.data.frame(adj_matrix)
 row_sums <- rowSums(adj_matrix)
 
-
-
 # Normalize the adjacency matrix
 w <- adj_matrix / row_sums
 
@@ -155,15 +153,16 @@ id <- cbind(sum_column(w, "A"),sum_column(w, "B"),sum_column(w, "C"),sum_column(
 od <- cbind(sum_row(w, "A"),sum_row(w, "B"),sum_row(w, "C"),sum_row(w, "D"),sum_row(w, "E"),sum_row(w, "F"))
 
 
-degree_table <- rbind(id, od)
+degree_table_norm <- rbind(id, od)
 
-colnames(degree_table) <- c("A","B","C","D","E","F")
-rownames(degree_table) <- c("In", "Out")
+colnames(degree_table_norm) <- c("A","B","C","D","E","F")
+rownames(degree_table_norm) <- c("In", "Out")
 
-degree_table
+degree_table_norm
 
 # As expected based on the slides, the out-degree of the agents are equalized to 1.
-# Also, the most central buyers are now C and D instead of B and C. Clearly the row-normalization leads to a distortion.
+# Also, the most central buyers are now B and D instead of B and C. Clearly the row-normalization leads to a distortion.
+# is it possible to have a degree > 1?
 
 ##### Exercise B.2.2: How would the network change if you removed or added a specific agent?
 
@@ -185,9 +184,7 @@ colnames(adj_matrix) <- V(g1)$name
 # Print the adjacency matrix
 print(adj_matrix)
 
-##### continue here
-
-
+##### continue here with analysis from above and how reciprocity changes
 
 
 ### Exercise B.3
@@ -199,6 +196,10 @@ agent_characteristics <- rnorm(num_agents)  # Simulate agent characteristics fro
 # Let's assume the response variable depends on the agent characteristics and network structure
 # Here, we'll use a simple linear model where the response variable is a linear combination of agent characteristics and network structure
 # For simplicity, let's assume the network structure affects the response as an additional additive term
+
+w
+
+
 resp1 <- 0.5 * agent_characteristics + 0.2 * degree(g)
 lm_model_1 <- lm(resp1 ~ agent_characteristics + degree(g))
 
@@ -222,6 +223,10 @@ lm_model_4 <- lm(resp4 ~ agent_characteristics + degree(g))
 lm_model_4
 
 
+
+
+
+###
 # Compute centrality measures
 degree_centralities <- degree(g)
 betweenness_centralities <- betweenness(g)

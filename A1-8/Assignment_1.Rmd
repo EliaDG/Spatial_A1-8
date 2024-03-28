@@ -16,11 +16,83 @@ Super cool trick for the R_Markdown is to have saved the workspace of your basic
 ```{r}
 source("./code/__packages.R")
 load("./WS_CD.RData")
+load("./WS_AB.RData")
 ```
 
+## Exercise A
+The dependent variable medv shows the median value of owner-occupied homes in $1000s.
+We chose the following covariates for our linear model:
+1) crim: per capita crime rate by town.
+2) zn: proportion of residential land zoned for lots over 25,000 sq.ft.
+3) indus: proportion of non-retail business acres per town.
+4) chas: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+5) nox: nitrogen oxides concentration (parts per 10 million).
+
+Task: Create a function that takes your dependent variable and the covariates as inputs,
+and return a list with:
+– OLS point estimates for the intercept, slope parameters, and the error variance.
+– Suitable test statistics with corresponding p-values for the relevant coefficients.
+– Intervals of the coefficients for a confidence level of 95%.
 ```{r}
-TR_plot_2
+pp_pred <- function(dependent_variable, covariates) {
+  data <- data.frame(dependent_variable, covariates)
+  model <- lm(dependent_variable ~ ., data)
+  coefficients <- coef(model)
+  se <- summary(model)$coefficients[, "Std. Error"]
+  t_values <- coefficients / se
+  p_values <- 2 * pt(abs(t_values), df = df.residual(model), lower.tail = FALSE)
+  conf_int <- confint.default(model)
+  results <- data.frame(
+    "Coefficients" = coefficients,
+    "Standard Errors" = se,
+    "t-values" = t_values,
+    "p-values" = p_values,
+    "Confidence Intervals (95%)" = conf_int
+  )
+  
+  return(results)
+}
 ```
+
+# Call the function and print list
+```{r}
+result <- property_price_prediction(dependent_variable, covariates)
+print(result)
+```
+
+## Exercise B
+
+Task: Come up with some network of interest, vaguely related to some real-world example
+(describe very briefly), with at least six agents and ten edges between them.
+
+Our real world example is one of a supply chain network where there is rarely any reciprocity: construction of airplanes. The main vertices is the firm constructing the airplane (B), where all manufactured parts end up (high in-degree, low out-degree). On the other hand, among manufactures of airplane parts little reciprocity might occur as they need specialized part to finish their own parts (D and A).
+
+B.1: Draw a graph of the network; create the adjacency matrix in R.
+```{r}
+plot(g, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
+
+print(adj_matrix)
+```
+
+B.2: Who are the most and least central agents in the network? Name, explain, and try
+to quantify different notions of centrality.
+
+We quantified the in- and out-degree of centrality. The in-degree shows how many links are directed towards are node, while the out-degree shows how many links are directed from a node (to another). A node from which a link goes out to another is considered a supplier, a node which is receiving links is considered a buyer.
+The degree_table shows how many links go in and out from each node. This way we can quantify the most central buyer and supplier in our network.
+According to the table B and C have the most links directed towards them while E has none directed towards it. Hence, B and C are the most central "buyers", E the least.
+Also, A and C have the most links directed towards others while B has none directed towards others. Hence A and C are the most central "suppliers" and B the least.
+
+```{r}
+degree_table
+```
+
+B.2.1: How would centrality change if you considered a row-normalized network instead?
+
+
+```{r}
+degree_table
+```
+
 ## Exercise C
 
 In this exercise, we will work with spatial projections of Türkiye's NUTS-2 regions. Despite not being a member of the European Union, Türkiye has adopted the Nomenclature of Territorial Units for Statistics (NUTS) since 2002. The country counts 26 subregions, and we accessed its spatial data directly from the [GISCO](https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/nuts) source via `get_eurostat_spatial()` function. By default this function loads the EPSG-4326 projection of the map, corresponding to the World Geodetic System 1984 ensemble (WGS84). It is based on a geocentric datum, meaning it defines the Earth's shape as an ellipsoid (a flattened sphere) rather than a perfect sphere.

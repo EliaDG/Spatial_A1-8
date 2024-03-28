@@ -56,6 +56,7 @@ property_price_prediction <- function(dependent_variable, covariates) {
   )
   
   return(results)
+  
 }
 
 # Call the property_price_prediction function
@@ -271,3 +272,5 @@ Interpretation
   # - Node C has a higher closeness centrality compared to Nodes A, B, and F, but lower compared to Nodes D and E.
   # - Node D has the highest closeness centrality, suggesting that it is relatively close to other nodes in the network.
   # - Node E has a closeness centrality similar to Nodes A, B, and F, but lower than Node D.
+
+save.image("WS_AB.RData")

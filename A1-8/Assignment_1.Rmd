@@ -2,28 +2,31 @@
 title: "Assignment 1 - Group 8"
 author: "Elia Di Gregorio and Robert Auerbach"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: 
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    fig_width: 7
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
-```{r}
+```{r Setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
 source("./code/__packages.R")
 load("./Workspace_CD.RData")
 load("./Workspace_AB.RData")
 ```
 
 
-## Exercise A
-The dependent variable medv shows the median value of owner-occupied homes in $1000s.
+# Exercise A
+The dependent variable `medv` shows the median value of owner-occupied homes in $1000s.
 We chose the following covariates for our linear model:
-1) crim: per capita crime rate by town.
-2) zn: proportion of residential land zoned for lots over 25,000 sq.ft.
-3) indus: proportion of non-retail business acres per town.
-4) chas: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
-5) nox: nitrogen oxides concentration (parts per 10 million).
+1) `crim`: per capita crime rate by town.
+2) `zn`: proportion of residential land zoned for lots over 25,000 sq.ft.
+3) `indus`: proportion of non-retail business acres per town.
+4) `chas`: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+5) `nox`: nitrogen oxides concentration (parts per 10 million).
 
 Task: Create a function that takes your dependent variable and the covariates as inputs,
 and return a list with:
@@ -52,27 +55,29 @@ pp_pred <- function(dependent_variable, covariates) {
 }
 ```
 
-# Call the function and print list
+Call the function and print list:
+
 ```{r}
 result <- property_price_prediction(dependent_variable, covariates)
 print(result)
 ```
 
-## Exercise B
+# Exercise B
 
 Task: Come up with some network of interest, vaguely related to some real-world example
 (describe very briefly), with at least six agents and ten edges between them.
 
 Our real world example is one of a supply chain network where there is rarely any reciprocity: construction of airplanes. The main vertices is the firm constructing the airplane (B), where all manufactured parts end up (high in-degree, low out-degree). On the other hand, among manufactures of airplane parts little reciprocity might occur as they need specialized part to finish their own parts (D and A).
 
-B.1: Draw a graph of the network; create the adjacency matrix in R.
+The adjacency matrix in R.can be drawn as follows: 
+
 ```{r}
 plot(g, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
 
 print(adj_matrix)
 ```
 
-B.2: Who are the most and least central agents in the network? Name, explain, and try
+Who are the most and least central agents in the network? Name, explain, and try
 to quantify different notions of centrality.
 
 We quantified the in- and out-degree of centrality. The in-degree shows how many links are directed towards are node, while the out-degree shows how many links are directed from a node (to another). A node from which a link goes out to another is considered a supplier, a node which is receiving links is considered a buyer.
@@ -84,7 +89,7 @@ Also, A and C have the most links directed towards others while B has none direc
 degree_table
 ```
 
-B.2.1: How would centrality change if you considered a row-normalized network instead?
+How would centrality change if you considered a row-normalized network instead?
 
 We calculate the sums of each row of the adjacency matrix and then divide the addjacency matrix by the row sums.
 Again, we compute the centrality measures of in- and out-degree. As expected (based on the slides) the out-degree of the agents are equalized to 1. Also, the most central buyers are now B and D instead of B and C. Clearly the row-normalization leads to a distortion.
@@ -93,7 +98,7 @@ Again, we compute the centrality measures of in- and out-degree. As expected (ba
 degree_table_norm
 ```
 
-B.2.2: How would the network change if you removed or added a specific agent?
+How would the network change if you removed or added a specific agent?
 We removed agent "F" and repeated the steps from above.
 
 ```{r}
@@ -114,7 +119,7 @@ st_crs(Türkiye)
 To use another projection and/or CRS we employed the `st_transform()` function and recurred to the Equal Earth Projection and to the Lambert Azimuthal Equal Area Projection. Both preserve the relative sizes of areas on the Earth's surface. This means that areas on the map are represented accurately in relation to each other in terms of size, making it suitable for thematic mapping and spatial analysis. However the former is classified as a pseudo-cylindrical projection because it projects the Earth's surface onto a cylinder and then unwraps the cylinder to form a rectangular map, whereas the latter projects the Earth's surface onto a plane tangent to a specific point (the center of the projection).
 The difference in projections is highlighted by the following map:
 
-```{r}
+```{r fig.align='center'}
 plot(TR_plot_1)
 ```
 
@@ -123,14 +128,14 @@ The dataset used was `tgs00111`: Nights spent at tourist accommodation establish
 
 By plotting the latter variable, we were able to group together regions based on whether the majority of overnight stay in hotels were by domestic tourists or foreign tourists.
 
-```{r}
+```{r, fig.align='center'}
 plot(TR_plot_2)
 ```
 Not surprisingly, regions with famous "instagrammable" destinations like Istanbul or Antalya and Burdur had a majority of foreign tourists staying overnight in hotels, while the rest of the country registered a higher domestic tourists inflow, suggesting a limited international touristic network in Türkiye.
 
 The plot for the continuous scale variable focused more on the domestic dimension of tourism and represented the share of domestic tourist overnight stays in different Turkish regions.
 
-```{r}
+```{r, fig.align='center'}
 plot(TR_plot_3)
 ```
 Besides stressing the point made by the previous map, this time we get more insights on the distribution of Domestic tourists in Türkiye. To further enrich the plot, we also decided to highlight the names of those 3 regions with beyond 95% of domestic tourists overnight stays.
@@ -152,7 +157,7 @@ For visualizations created using R and ggplot2, which inherently produce vector 
 # Exercise D
 
 ## Comparison of support for Komorowski and Duda
-```{r}
+```{r, fig.align='center'}
 plot(PL_plot_1)
 ```
 The provided R code generates a thematic map representing the outcomes of the second round of the 2015 Polish presidential elections at the municipality level. The data is grouped based on whether the winning candidate in each municipality was Duda or Komorowski. The plot uses different shades of red or blue (representing Duda or Komorowski, respectively) to indicate varying levels of majority support for the respective candidate.
@@ -169,7 +174,7 @@ Three types of anomalies are identified:
 - `anomaly_count`: Detects anomalies in the count of voting envelopes placed in the ballot box versus the number of voting papers taken from envelopes in either round of voting.
 
 
-```{r}
+```{r, fig.align='center'}
 PL_plot_2
 ```
 Anomalies are represented as points (`geom_point()`) on the map, with each point's color indicating the type of anomaly and size representing the how many anomalies types were overall detected.In this way, one can highlight areas where specific types of anomalies or their combinations were observed more frequently.
@@ -181,7 +186,7 @@ Notice that out of the three anomalies, the one about spelling is the "weak" one
 ## Turnout for each election round
 For the final visualization, employing `tm_shape()` function, Turnout share in the first and second round of the presidential election was plotted. We made use of the `tm_facets` specification to combine in a single plot both heatmaps.
 
-```{r}
+```{r, fig.align='center'}
 PL_plot_3
 ```
 

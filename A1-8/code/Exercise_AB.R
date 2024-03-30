@@ -68,7 +68,7 @@ print(result)
 # Exercise B.1
 
 # Define the edges
-edges <- c("A", "B", "A", "D", "A", "C", "C", "B", "D", "A", "D", "B", "D", "C", "E", "D", "E", "F", "F", "D")
+edges <- c("A", "B", "A", "C", "A", "D", "C", "B", "D", "A", "D", "B", "D", "C", "E", "D", "E", "F", "F", "D")
 
 # Create the graph
 g <- graph(edges, directed = TRUE)
@@ -97,8 +97,8 @@ reciprocity(g)
 
 # Exercise B.2
 # Degree of agents
-id <- cbind(1,3,3,2,0,1)
-od <- cbind(3,0,3,1,2,1)
+id <- cbind(1,3,2,3,0,1)
+od <- cbind(3,0,1,3,2,1)
 
 degree_table <- rbind(id, od)
 
@@ -178,7 +178,7 @@ degree_table_norm
 ##### Exercise B.2.2: How would the network change if you removed or added a specific agent?
 
 # Define the edges
-edges <- c("A", "B", "A", "D", "A", "C", "C", "B", "D", "A", "D", "B", "D", "C", "E", "D")
+edges <- c("A", "B", "A", "C", "A", "D", "C", "B", "D", "A", "D", "B", "D", "C", "E", "D")
 
 # Create the graph
 g1 <- graph(edges, directed = TRUE)
@@ -207,6 +207,19 @@ colnames(rectrans_table) <- c("Network Complete","Network Removed")
 rownames(rectrans_table) <- c("Reciprocity", "Transivity")
 
 rectrans_table
+
+id_g1 <- cbind(1,3,3,2,0,1)
+od_g1 <- cbind(3,0,3,1,2,1)
+
+degree_table_g1 <- rbind(id, od)
+
+colnames(degree_table_g1) <- c("A","B","C","D","E","F")
+rownames(degree_table_g1) <- c("In", "Out")
+
+rec_g <- reciprocity(g)
+trans_g <- transitivity(g)
+
+degree_table_g1
 
 ##### continue here with analysis from above and how reciprocity changes
 
@@ -288,4 +301,4 @@ print(centrality_data)
   # - Node D has the highest closeness centrality, suggesting that it is relatively close to other nodes in the network.
   # - Node E has a closeness centrality similar to Nodes A, B, and F, but lower than Node D.
 
-save.image("WS_AB.RData")
+save.image("Workspace_AB.RData")

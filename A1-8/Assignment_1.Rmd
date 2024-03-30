@@ -103,8 +103,8 @@ We removed agent "F" and repeated the steps from above.
 
 ```{r}
 plot(g1, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
-reciprocity(g1)
-transitivity(g1)
+
+rectrans_table
 ```
 
 # Exercise C

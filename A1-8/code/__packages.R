@@ -15,7 +15,8 @@ p_load("tidyverse",
        "spDataLarge",
        "MASS",
        "igraph",
-       "svglite")
+       "svglite",
+       "rsvg")
 
 # install.packages("spDataLarge", repos = "https://geocompr.r-universe.dev")
 

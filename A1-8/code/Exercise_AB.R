@@ -301,4 +301,4 @@ print(centrality_data)
   # - Node D has the highest closeness centrality, suggesting that it is relatively close to other nodes in the network.
   # - Node E has a closeness centrality similar to Nodes A, B, and F, but lower than Node D.
 
-save.image("Workspace_AB.RData")
+#save.image("Workspace_AB.RData")

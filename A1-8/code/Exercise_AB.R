@@ -117,7 +117,7 @@ degree_table
 
 ##### Exercise B.2.1: How would centralities change if you considered a row-normalized network instead?
 # Compute row sums for normalization
-adj_matrix <- as.data.frame(adj_matrix)
+adj_matrix <- as.data.frame(adj_matrix) # if not working use: as.matrix()
 row_sums <- rowSums(adj_matrix, dims = 1)
 
 # Normalize the adjacency matrix
@@ -281,8 +281,6 @@ centrality_data <- data.frame(
 
 # Print the centrality data
 print(centrality_data)
-
-#Interpretation
 
 # Degree Centrality:
   # - Node A and Node B have a degree centrality of 3, indicating that they are connected to 3 other nodes in the network.

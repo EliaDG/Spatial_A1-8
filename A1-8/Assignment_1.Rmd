@@ -82,8 +82,8 @@ to quantify different notions of centrality.
 
 We quantified the in- and out-degree of centrality. The in-degree shows how many links are directed towards are node, while the out-degree shows how many links are directed from a node (to another). A node from which a link goes out to another is considered a supplier, a node which is receiving links is considered a buyer.
 The degree_table shows how many links go in and out from each node. This way we can quantify the most central buyer and supplier in our network.
-According to the table B and C have the most links directed towards them while E has none directed towards it. Hence, B and C are the most central "buyers", E the least.
-Also, A and C have the most links directed towards others while B has none directed towards others. Hence A and C are the most central "suppliers" and B the least.
+According to the table B and D have the most links directed towards them while E has none directed towards it. Hence, B and C are the most central "buyers", E the least.
+Also, A and D have the most links directed towards others while B has none directed towards others. Hence A and D are the most central "suppliers" and B the least.
 
 ```{r}
 degree_table
@@ -101,9 +101,14 @@ degree_table_norm
 How would the network change if you removed or added a specific agent?
 We removed agent "F" and repeated the steps from above.
 
+The most central buyer is now B alone, E still is the least central buyer.
+The most central supplier is still A and D, the least is still B.
+
+We also compared the reciprocity and transitivity of both networks. The reciprocity is higher with the agent F removed, which is due to the fact that the network has a higher share of reciprocated links relative to the amount of possible reciprocated links. Also, the so called clustering coefficient (Transitivity) is higher in the Network with fewer agents as there is a 10% higher probability that vertices are connected. This is especially true for a network with low reciprocity such as ours.
+
 ```{r}
 plot(g1, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
-
+degree_table_g1
 rectrans_table
 ```
 

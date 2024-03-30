@@ -195,6 +195,21 @@ colnames(adj_matrix) <- V(g1)$name
 # Print the adjacency matrix
 print(adj_matrix)
 
+id_g1 <- cbind(1,3,2,2,0)
+od_g1 <- cbind(3,0,1,3,1)
+
+degree_table_g1 <- rbind(id_g1, od_g1)
+
+colnames(degree_table_g1) <- c("A","B","C","D","E")
+rownames(degree_table_g1) <- c("In", "Out")
+
+degree_table_g1
+
+rec_g <- reciprocity(g)
+trans_g <- transitivity(g)
+
+?transitivity
+
 rec_g1 <- reciprocity(g1)
 trans_g1 <- transitivity(g1)
 
@@ -207,19 +222,6 @@ colnames(rectrans_table) <- c("Network Complete","Network Removed")
 rownames(rectrans_table) <- c("Reciprocity", "Transivity")
 
 rectrans_table
-
-id_g1 <- cbind(1,3,3,2,0,1)
-od_g1 <- cbind(3,0,3,1,2,1)
-
-degree_table_g1 <- rbind(id, od)
-
-colnames(degree_table_g1) <- c("A","B","C","D","E","F")
-rownames(degree_table_g1) <- c("In", "Out")
-
-rec_g <- reciprocity(g)
-trans_g <- transitivity(g)
-
-degree_table_g1
 
 ##### continue here with analysis from above and how reciprocity changes
 

@@ -102,4 +102,4 @@ PL_plot_2
 PL_plot_3
 
 # SAVING -----------------------------------------------------------------------
-save.image(file = "Workspace_D.RData")
+#save.image(file = "Workspace_D.RData")

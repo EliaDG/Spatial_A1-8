@@ -6,16 +6,16 @@ output:
   pdf_document:
     toc: true
     toc_depth: 2
-    fig_width: 7
+papersize: a4
+urlcolor: blue
 ---
 
 ```{r Setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 
 source("./code/__packages.R")
 load("./Workspace_AB.RData")
-load("./Workspace_C.RData")
-load("./Workspace_D.RData")
 ```
 
 # Exercise A
@@ -114,7 +114,7 @@ rectrans_table
 
 
 # Exercise C
-In this exercise, we will work with spatial projections of Europe's NUTS-2 regions. Europe counts 331 subregions, however, for the sake of visualization, we excluded overseas territories and focused on the main continental area.
+In this exercise, we will work with spatial projections of Europe's NUTS-2 regions. Europe counts 331 subregions, however we excluded overseas territories and focused on the main continental area to improve the final visualization.
 
 ## Different projections
 We accessed its spatial data directly from the [GISCO](https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/nuts) source via `get_eurostat_spatial()` function. By default this function loads the EPSG-4326 projection of the map, corresponding to the World Geodetic System 1984 ensemble (WGS84). It is based on a geocentric datum, meaning it defines the Earth's shape as an ellipsoid (a flattened sphere) rather than a perfect sphere.
@@ -141,7 +141,7 @@ plot_Europe <- ggplot() +
 
 Europe_laea <- st_transform(Europe, crs = "+proj=laea +lat_0=45 +lon_0=30")
 plot_laea <- ggplot() +
-  geom_sf(data = Europe_laea, color = "red", fill = NA) +
+  geom_sf(data = Europe_laea, color = "darkblue", fill = NA) +
   theme_minimal() +
   labs(title = "Lambert Azimuthal Projection", size = 12)
 
@@ -153,7 +153,7 @@ plot(EU_plot_1)
 ```
 
 ## Map and Dataset
-The dataset used was `tgs00111`: Nights spent at tourist accommodation establishments by NUTS 2 regions ([here](<https://ec.europa.eu/eurostat/cache/metadata/en/tour_occ_esms.htm) the Metadata for consultation). The dataset covers internal tourism, in other words tourism flows within the country (domestic tourism) or from abroad to destinations in the country (inbound tourism) for the year 2022. We further enhanced the dataset with two additional columns with the share of domestic and foreign tourist overnights (continuous scale), and one column for a factor variable based on the condition that if the domestic tourism share of overnight stay is greater than 50%, the tourist is labeled as "Domestic Tourist"; otherwise, they are labeled as "Foreign Tourist".
+The dataset used was `tgs00111`: Nights spent at tourist accommodation establishments by NUTS 2 regions ([here](<https://ec.europa.eu/eurostat/cache/metadata/en/tour_occ_esms.htm) the Metadata for consultation). The dataset covers internal tourism, in other words tourism flows within the country (domestic tourism) or from abroad to destinations in the country (inbound tourism) for the year 2022. We further enhanced the dataset with two additional columns with the share of domestic and foreign tourist overnights (continuous scale), and one column for a factor variable based on the condition that if the domestic tourism share of overnight stay is greater than 50%, the tourist is labeled as "Domestic Tourist"; otherwise, they are labeled as "Foreign Tourist" (discrete scale).
 
 ```{r Dataset from Eurostat}
 data_nightstay <- get_eurostat("tgs00111",
@@ -167,12 +167,12 @@ data_nightstay <- get_eurostat("tgs00111",
   pivot_wider(., names_from = c_resid, values_from = values) %>%
   mutate(DOM_SHARE = DOM/TOTAL,
          FOR_SHARE = FOR/TOTAL,
-         TURIST = factor(ifelse(DOM_SHARE > 0.5, 0, 1), levels = c(1, 0), labels = c("Foreign Tourist", "Domestic Tourist")))
+         TURIST = factor(ifelse(DOM_SHARE > 0.5, 0, 1), levels = c(1, 0),
+                         labels = c("Foreign Tourist", "Domestic Tourist")))
 ```
-
 By plotting the latter variable, we were able to group together regions based on whether the majority of overnight stays in hotels were by domestic tourists or foreign tourists.
 
-```{r Distribution of Tourist Overnight-Stay by Origin}
+```{r Distribution of Tourist Overnight-Stay by Origin, width = "80%", fig.align='center'}
 EU_plot_2 <- ggplot(data_nightstay) +
   geom_sf(aes(fill = TURIST, geometry = geometry)) +
   theme_map() +
@@ -186,22 +186,25 @@ EU_plot_2 <- ggplot(data_nightstay) +
 
 plot(EU_plot_2)
 ```
-
-
-Not surprisingly, these where the regions with the most famous "Instagrammable" destinations such as:
+Not surprisingly, these were the regions with the most famous "Instagrammable" destinations such as:
 
 - Italy: Venice, Milan, Florence, or Rome,
+
 - Spain: Barcelona and the Balearic Islands,
+
 - France: Paris,
+
 - Austria: ski hubs in the Alpine regions and Vienna,
+
 - the capital region of Brussels, the Netherlands, Portugal, Ireland, and many other Central and Eastern European (CEE) countries,
+
 - the coastal regions of Greece and Turkey (Antalya and Bodrum).
 
-Overall, the plot conveys a picture of the main touristic hotspots of Europe where tourists from abroad mostly arrive, However it might be biased as it does not consider other touristic accomodations such as Airbnb, mostly used by young Europeans.
+Overall, the plot conveys a picture of the main touristic hotspots of Europe where tourists from abroad mostly arrive, However it might be biased as it does not consider other touristic accommodations such as Airbnb, mostly used by young Europeans.
 
-The plot for the continuous scale variable focused more on the domestic dimension of tourism and represented the share of domestic tourist overnight stays in different Turkish regions.
+The plot for the continuous scale variable focused on the domestic dimension of tourism and represented the share of domestic tourist overnight stays in different European regions.
 
-```{r Distribution of Domestic Tourist Overnight-stay}
+```{r Distribution of Domestic Tourist Overnight-stay, width = "80%", fig.align='center'}
 EU_plot_3 <- ggplot(data_nightstay) +
   geom_sf(aes(fill = DOM_SHARE, geometry = geometry)) +
   theme_map() +
@@ -216,14 +219,14 @@ EU_plot_3 <- ggplot(data_nightstay) +
                      name = "Share of Domestic Tourist Overnights",
                      guide = guide_colorbar(direction = "horizontal", 
                                             barheight = unit(2, units = "mm"),
-                                            barwidth = unit(54, units = "mm"),
+                                            barwidth = unit(51, units = "mm"),
                                             draw.ulim = TRUE,
                                             title.position = "top"))
 
 plot(EU_plot_3)
 ```
 
-Besides stressing the point made by the previous map, this time we get more insights on the distribution of Domestic tourists in Europe. Germany appears to see a higher flow of in-country movement in its Bundesländer. So does some Italian regions of the eastern coast, which are notably more difficult to reach via international connections like Abrruzzi and Molise or Calabria. Similarly, we notice a smaller share of foreigners in lateral CEE countries and Turkey, where the inland regions are mostly hosting domestic tourists.
+Besides stressing the point made by the previous map, this time we get more insights on the distribution of Domestic tourists in Europe. Germany appears to see a higher flow of in-country movement in its Bundesländer. So does some Italian regions of the eastern coast, which are notably more difficult to reach via international connections like Abruzzi and Molise or Calabria. Similarly, we notice a smaller share of foreigner's overnight stay in peripherical CEE countries' regions and Turkey, where the inland regions are mostly hosting domestic tourists.
 
 ## Storing visualizations
 There are two conceptually different ways to store visualizations: raster-based and vector-based formats. 
@@ -236,9 +239,12 @@ For visualizations created using R and ggplot2, which inherently produce vector 
 
 ```{r Saving plots}
 # Example on how to save the above-displayed plots:
-ggsave("EU_plot_1.svg", plot = EU_plot_1, path = "./plot", device = "svg", width = 30, height = 15, units = "cm")
-ggsave("EU_plot_2.svg", plot = EU_plot_2, path = "./plot", device = "svg", width = 30, height = 15, units = "cm")
-ggsave("EU_plot_3.svg", plot = EU_plot_3, path = "./plot", device = "svg", width = 30, height = 15, units = "cm")
+ggsave("EU_plot_1.svg", plot = EU_plot_1, path = "./plot", device = "svg", 
+       width = 30, height = 15, units = "cm")
+ggsave("EU_plot_2.svg", plot = EU_plot_2, path = "./plot", device = "svg", 
+       width = 30, height = 15, units = "cm")
+ggsave("EU_plot_3.svg", plot = EU_plot_3, path = "./plot", device = "svg", 
+       width = 30, height = 15, units = "cm")
 ```
 \newpage
 
@@ -247,7 +253,8 @@ ggsave("EU_plot_3.svg", plot = EU_plot_3, path = "./plot", device = "svg", width
 ## Comparison of support for Komorowski and Duda
 ```{r Support Duda vs Komorowsky, fig.align='center'}
 df <- pol_pres15 %>% 
-  mutate(Winner = factor(ifelse(II_Duda_share > 0.5, 1, 0), levels = c(1, 0), labels = c("Duda", "Komorowski")),
+  mutate(Winner = factor(ifelse(II_Duda_share > 0.5, 1, 0), levels = c(1, 0), 
+                         labels = c("Duda", "Komorowski")),
          Majority_votes_brkdwn =ifelse(II_Duda_share > 0.5, II_Duda_share, II_Komorowski_share))
 
 PL_plot_1 <- ggplot(df) +
@@ -285,11 +292,22 @@ Three types of anomalies are identified:
 
 ```{r Anomalies PVE, fig.align='center'}
 data <- pol_pres15 %>%
-  mutate(anomaly_invalid = ifelse(I_invalid_voting_papers > I_postal_voting_envelopes_received | II_invalid_voting_papers > II_postal_voting_envelopes_received, 1, 0),
-         anomaly_spelling = ifelse(I_invalid_voting_papers > 0 & I_PVE_of_which_no_declaration == 0 & I_PVE_of_which_no_signature == 0 & I_PVE_of_which_no_voting_envelope == 0 & I_PVE_of_which_voting_envelope_open == 0 |
-                                     II_invalid_voting_papers > 0 & II_PVE_of_which_no_declaration == 0 & II_PVE_of_which_no_signature == 0 & II_PVE_of_which_no_voting_envelope == 0 & II_PVE_of_which_voting_envelope_open == 0, 1, 0),
-         anomaly_count = ifelse(I_voting_envelopes_placed_in_ballot_box != I_of_which_voting_papers_taken_from_voting_envelopes | II_voting_envelopes_placed_in_ballot_box != II_of_which_voting_papers_taken_from_voting_envelopes, 1,0),
-         anomaly = ifelse(anomaly_invalid == 1 | anomaly_spelling == 1 | anomaly_count == 1, anomaly_invalid + anomaly_spelling + anomaly_count, 0)) %>% 
+  mutate(anomaly_invalid = ifelse(I_invalid_voting_papers > I_postal_voting_envelopes_received |
+                                  II_invalid_voting_papers > II_postal_voting_envelopes_received, 1, 0),
+         anomaly_spelling = ifelse(I_invalid_voting_papers > 0 &
+                                   I_PVE_of_which_no_declaration == 0 &
+                                   I_PVE_of_which_no_signature == 0 &
+                                   I_PVE_of_which_no_voting_envelope == 0 &
+                                   I_PVE_of_which_voting_envelope_open == 0 |
+                                   II_invalid_voting_papers > 0 &
+                                   II_PVE_of_which_no_declaration == 0 &
+                                   II_PVE_of_which_no_signature == 0 &
+                                   II_PVE_of_which_no_voting_envelope == 0 &
+                                   II_PVE_of_which_voting_envelope_open == 0, 1, 0),
+         anomaly_count = ifelse(I_voting_envelopes_placed_in_ballot_box != I_of_which_voting_papers_taken_from_voting_envelopes |
+                                II_voting_envelopes_placed_in_ballot_box != II_of_which_voting_papers_taken_from_voting_envelopes, 1,0),
+         anomaly = ifelse(anomaly_invalid == 1 | anomaly_spelling == 1 |
+                          anomaly_count == 1, anomaly_invalid + anomaly_spelling + anomaly_count, 0)) %>% 
   mutate(anomaly_type = case_when(
     anomaly_invalid == 0 & anomaly_spelling == 0 & anomaly_count == 0 ~ "None",
     anomaly_invalid == 1 & anomaly_spelling == 0 & anomaly_count == 0 ~ "Invalid Anomaly",
@@ -297,8 +315,7 @@ data <- pol_pres15 %>%
     anomaly_invalid == 0 & anomaly_spelling == 0 & anomaly_count == 1 ~ "Extraction Anomaly",
     anomaly_invalid == 1 & anomaly_spelling == 1 & anomaly_count == 0 ~ "Invalid + Spelling Anomaly",
     anomaly_invalid == 1 & anomaly_spelling == 0 & anomaly_count == 1 ~ "Invalid + Extraction Anomaly",
-    anomaly_invalid == 0 & anomaly_spelling == 1 & anomaly_count == 1 ~ "Extraction + Spelling Anomaly",
-    TRUE ~ "Other"
+    anomaly_invalid == 0 & anomaly_spelling == 1 & anomaly_count == 1 ~ "Extraction + Spelling Anomaly"
   ))
 
 # Need x and y coordinates for point, thus convert the geometry column to sf object
@@ -321,11 +338,11 @@ PL_plot_2 <- ggplot(data_with_centroid) +
 
 plot(PL_plot_2)
 ```
-Anomalies are represented as points (`geom_point()`) on the map, with each point's color indicating the type of anomaly and size representing the how many anomalies types were overall detected.In this way, one can highlight areas where specific types of anomalies or their combinations were observed more frequently.
+Anomalies are represented as points `geom_point()` on the map, with each point's color indicating the type of anomaly and size representing the how many anomalies types were overall detected.In this way, one can highlight areas where specific types of anomalies or their combinations were observed more frequently.
 
-By visually exploring anomalies in the handling of voting materials, it appears that this was a widespread problem, involving several municipalities, although no clear pattern can be detected.
+By visually exploring anomalies in the handling of voting materials, it appears that this was a widespread problem, involving several municipalities. The majority of anomalies seems to have happened in the center-south part of the country which was where Duda won, as highlighted by the previous plot. 
 
-Notice that out of the three anomalies, the one about spelling is the "weak" one. Despite postal voting envelopes were return with a declaration, and a sealed voting envelope, the count of invalid PVE is still higher. It is not clear though, whether this is due to some further unrecorded issues (e.g. the misspelling of the candidate's name, thus the label for this variable). Further material, information or context should be validate the theory.
+Notice that among the three anomalies identified, the one related to spelling relies on a specific assumption. This assumption presumes that all potential reasons for invalidity were documented in the dataset, leading to the anomaly being the higher count of invalid PVEs despite their return with a signed declaration and sealed voting envelope. However, it is crucial to consider that there may be additional, unrecorded issues contributing to this discrepancy, such as misspelling the candidate's name (reason of the variable name). Validating this assumption requires further material, information, or contextual details.
 
 ## Turnout for each election round
 For the final visualization, employing `tm_shape()` function, Turnout share in the first and second round of the presidential election was plotted. We made use of the `tm_facets` specification to combine in a single plot both heatmaps.
@@ -346,4 +363,10 @@ PL_plot_3 <- tm_shape(ds) +
 PL_plot_3
 ```
 
-Overall, it appears that in the second round there was a higher public involvement. In rural areas this was the less stronger than in the large urban areas, where participation peaked as far as reaching almost 80%.
+Overall, it appears that in the second round there was a higher public involvement. In rural areas this was less stronger than in the more condensed urban areas, where participation peaked as far as reaching almost 80%.
+
+# Additional
+```{r}
+sessionInfo()
+```
+

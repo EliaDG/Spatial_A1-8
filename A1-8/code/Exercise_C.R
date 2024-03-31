@@ -184,9 +184,9 @@ EU_plot_3 <- ggplot(data_nightstay) +
 
 ## 3.C) ------------------------------------------------------------------------
 #Raster-based or Vector-based, see R_markdown file
-ggsave("EU_plot_1.svg", plot = EU_plot_1, path = "./plot", device = "svg", width = 30, height = 15, units = "cm")
-ggsave("EU_plot_2.svg", plot = EU_plot_2, path = "./plot", device = "svg", width = 30, height = 15, units = "cm")
-ggsave("EU_plot_3.svg", plot = EU_plot_3, path = "./plot", device = "svg", width = 30, height = 15, units = "cm")
+# ggsave("EU_plot_1.svg", plot = EU_plot_1, path = "./plot", device = "svg", width = 30, height = 15, units = "cm")
+# ggsave("EU_plot_2.svg", plot = EU_plot_2, path = "./plot", device = "svg", width = 30, height = 15, units = "cm")
+# ggsave("EU_plot_3.svg", plot = EU_plot_3, path = "./plot", device = "svg", width = 30, height = 15, units = "cm")
 
 EU_plot_1
 EU_plot_2

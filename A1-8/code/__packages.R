@@ -3,6 +3,7 @@
 library(pacman)
 
 p_load("tidyverse",
+       "dplyr",
        "eurostat",
        "tmap",
        "sf",

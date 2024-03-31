@@ -13,9 +13,9 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 
 source("./code/__packages.R")
+load("./Workspace_AB.RData")
 load("./Workspace_C.RData")
 load("./Workspace_D.RData")
-load("./Workspace_AB.RData")
 ```
 
 # Exercise A
@@ -110,6 +110,8 @@ plot(g1, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
 degree_table_g1
 rectrans_table
 ```
+\newpage
+
 
 # Exercise C
 In this exercise, we will work with spatial projections of Europe's NUTS-2 regions. Europe counts 331 subregions, however, for the sake of visualization, we excluded overseas territories and focused on the main continental area.
@@ -117,25 +119,74 @@ In this exercise, we will work with spatial projections of Europe's NUTS-2 regio
 ## Different projections
 We accessed its spatial data directly from the [GISCO](https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/nuts) source via `get_eurostat_spatial()` function. By default this function loads the EPSG-4326 projection of the map, corresponding to the World Geodetic System 1984 ensemble (WGS84). It is based on a geocentric datum, meaning it defines the Earth's shape as an ellipsoid (a flattened sphere) rather than a perfect sphere.
 
-```{r}
+```{r Europe sf}
+Europe <- get_eurostat_geospatial(
+  resolution = "01",
+  nuts_level = 2,
+  year = 2021) %>%
+  filter(!NUTS_ID %in% c("FRY1", "FRY2", "FRY3", "FRY4", "FRY5", "FRZZ",
+                         "PT20", "PT30", "PTZZ", "ES70", "ESZZ", "NO0B", "NOZZ"))
+
 st_crs(Europe)
 ```
 
 To use another projection and/or CRS we employed the `st_transform()` function and recurred to the Lambert Azimuthal Equal Area Projection. It preserve the relative sizes of areas on the Earth's surface. This means that areas on the map are represented accurately in relation to each other in terms of size, making it suitable for thematic mapping and spatial analysis. However it projects the Earth's surface onto a plane tangent to a specific point (the center of the projection).
 The difference in projections is highlighted by the following map:
 
-```{r}
-print(EU_plot_1)
+```{r Europe Projection}
+plot_Europe <- ggplot() +
+  geom_sf(data = Europe, color = "black", fill = NA) +
+  theme_minimal() +
+  labs(title = "WGS 84 Projection", size = 12)
+
+Europe_laea <- st_transform(Europe, crs = "+proj=laea +lat_0=45 +lon_0=30")
+plot_laea <- ggplot() +
+  geom_sf(data = Europe_laea, color = "red", fill = NA) +
+  theme_minimal() +
+  labs(title = "Lambert Azimuthal Projection", size = 12)
+
+EU_plot_1 <- plot_Europe + plot_laea +
+  plot_layout(ncol = 2) +
+  labs(caption="Source: Eurostat")
+
+plot(EU_plot_1)
 ```
 
 ## Map and Dataset
 The dataset used was `tgs00111`: Nights spent at tourist accommodation establishments by NUTS 2 regions ([here](<https://ec.europa.eu/eurostat/cache/metadata/en/tour_occ_esms.htm) the Metadata for consultation). The dataset covers internal tourism, in other words tourism flows within the country (domestic tourism) or from abroad to destinations in the country (inbound tourism) for the year 2022. We further enhanced the dataset with two additional columns with the share of domestic and foreign tourist overnights (continuous scale), and one column for a factor variable based on the condition that if the domestic tourism share of overnight stay is greater than 50%, the tourist is labeled as "Domestic Tourist"; otherwise, they are labeled as "Foreign Tourist".
 
-```{r}
-plot(EU_plot_2)
+```{r Dataset from Eurostat}
+data_nightstay <- get_eurostat("tgs00111",
+                               time_format = "raw",
+                               filters = list(
+                                 TIME_PERIOD = "2022"
+                               )) %>% 
+  merge(.,Europe, by = "geo", all=TRUE) %>%
+  filter(!NUTS_ID %in% c("FRY1", "FRY2", "FRY3", "FRY4", "FRY5", "FRZZ",
+                         "PT20", "PT30", "PTZZ", "ES70", "ESZZ", "NO0B", "NOZZ")) %>% 
+  pivot_wider(., names_from = c_resid, values_from = values) %>%
+  mutate(DOM_SHARE = DOM/TOTAL,
+         FOR_SHARE = FOR/TOTAL,
+         TURIST = factor(ifelse(DOM_SHARE > 0.5, 0, 1), levels = c(1, 0), labels = c("Foreign Tourist", "Domestic Tourist")))
 ```
 
 By plotting the latter variable, we were able to group together regions based on whether the majority of overnight stays in hotels were by domestic tourists or foreign tourists.
+
+```{r Distribution of Tourist Overnight-Stay by Origin}
+EU_plot_2 <- ggplot(data_nightstay) +
+  geom_sf(aes(fill = TURIST, geometry = geometry)) +
+  theme_map() +
+  labs(x = NULL, y = NULL,
+       title = "Distribution of Tourist Overnight-Stay by Origin",
+       subtitle = "Europe - NUTS2 Level",
+       caption = "Source: Eurostat")+
+  guides(fill = guide_legend(title = "Tourist Type:")) +
+  theme(legend.position = "bottom",
+        plot.title = element_text(face = "bold"))
+
+plot(EU_plot_2)
+```
+
 
 Not surprisingly, these where the regions with the most famous "Instagrammable" destinations such as:
 
@@ -150,7 +201,25 @@ Overall, the plot conveys a picture of the main touristic hotspots of Europe whe
 
 The plot for the continuous scale variable focused more on the domestic dimension of tourism and represented the share of domestic tourist overnight stays in different Turkish regions.
 
-```{r}
+```{r Distribution of Domestic Tourist Overnight-stay}
+EU_plot_3 <- ggplot(data_nightstay) +
+  geom_sf(aes(fill = DOM_SHARE, geometry = geometry)) +
+  theme_map() +
+  labs(x = NULL, y = NULL,
+       title = "Distribution of Domestic Tourist Overnight-stay",
+       subtitle = "Europe - NUTS2 Level",
+       caption = "Source: Eurostat") +
+  theme(legend.position = "bottom",
+        plot.title = element_text(face = "bold")) +
+  scale_fill_viridis(option = "viridis",
+                     direction = 1, 
+                     name = "Share of Domestic Tourist Overnights",
+                     guide = guide_colorbar(direction = "horizontal", 
+                                            barheight = unit(2, units = "mm"),
+                                            barwidth = unit(54, units = "mm"),
+                                            draw.ulim = TRUE,
+                                            title.position = "top"))
+
 plot(EU_plot_3)
 ```
 
@@ -165,21 +234,41 @@ On the other hand, vector-based formats such as SVG and PDF store image data usi
 
 For visualizations created using R and ggplot2, which inherently produce vector graphics, it is recommended to save them in vector-based formats like SVG or PDF. These formats maintain sharpness and clarity when scaled to any size, making them suitable for presentations, printing, and high-resolution displays. SVG is particularly useful for web-based graphics and interactive visualizations, while PDF is excellent for high-quality printing and cross-platform compatibility.
 
-```{r}
+```{r Saving plots}
 # Example on how to save the above-displayed plots:
 ggsave("EU_plot_1.svg", plot = EU_plot_1, path = "./plot", device = "svg", width = 30, height = 15, units = "cm")
 ggsave("EU_plot_2.svg", plot = EU_plot_2, path = "./plot", device = "svg", width = 30, height = 15, units = "cm")
 ggsave("EU_plot_3.svg", plot = EU_plot_3, path = "./plot", device = "svg", width = 30, height = 15, units = "cm")
-
 ```
-
+\newpage
 
 # Exercise D
 
 ## Comparison of support for Komorowski and Duda
-```{r, fig.align='center'}
+```{r Support Duda vs Komorowsky, fig.align='center'}
+df <- pol_pres15 %>% 
+  mutate(Winner = factor(ifelse(II_Duda_share > 0.5, 1, 0), levels = c(1, 0), labels = c("Duda", "Komorowski")),
+         Majority_votes_brkdwn =ifelse(II_Duda_share > 0.5, II_Duda_share, II_Komorowski_share))
+
+PL_plot_1 <- ggplot(df) +
+  geom_sf(aes(fill = Winner, alpha = Majority_votes_brkdwn, geometry = geometry)) +
+  scale_fill_manual(values = c("Duda" = "red", "Komorowski" = "blue")) +
+  scale_alpha(range = c(0.2, 1), guide = "none") +
+  theme_map() +
+  labs(x = NULL, y = NULL,
+       title = "2015 Polish Presidential Election: Duda vs. Komorowski",
+       subtitle = "Poland - Municipality Level",
+       caption = "Source: PKW") +
+  guides(fill=guide_legend(title = "Winner:")) +
+  theme(
+    plot.title = element_text(size = 11, face = "bold"),
+    plot.subtitle = element_text(size = 10),
+    legend.title = element_text(size = 10),
+    legend.text = element_text(size = 10))
+
 plot(PL_plot_1)
 ```
+
 The provided R code generates a thematic map representing the outcomes of the second round of the 2015 Polish presidential elections at the municipality level. The data is grouped based on whether the winning candidate in each municipality was Duda or Komorowski. The plot uses different shades of red or blue (representing Duda or Komorowski, respectively) to indicate varying levels of majority support for the respective candidate.
 
 The transparency of the colors also varies to reflect the degree of majority/support for the winning candidate in each municipality. Darker shades indicate a higher level of majority/support, while lighter shades represent a lower level of majority/support. This additional dimension helps visually emphasize areas where the winning candidate had a more significant lead in terms of voter share.
@@ -194,8 +283,43 @@ Three types of anomalies are identified:
 - `anomaly_count`: Detects anomalies in the count of voting envelopes placed in the ballot box versus the number of voting papers taken from envelopes in either round of voting.
 
 
-```{r, fig.align='center'}
-PL_plot_2
+```{r Anomalies PVE, fig.align='center'}
+data <- pol_pres15 %>%
+  mutate(anomaly_invalid = ifelse(I_invalid_voting_papers > I_postal_voting_envelopes_received | II_invalid_voting_papers > II_postal_voting_envelopes_received, 1, 0),
+         anomaly_spelling = ifelse(I_invalid_voting_papers > 0 & I_PVE_of_which_no_declaration == 0 & I_PVE_of_which_no_signature == 0 & I_PVE_of_which_no_voting_envelope == 0 & I_PVE_of_which_voting_envelope_open == 0 |
+                                     II_invalid_voting_papers > 0 & II_PVE_of_which_no_declaration == 0 & II_PVE_of_which_no_signature == 0 & II_PVE_of_which_no_voting_envelope == 0 & II_PVE_of_which_voting_envelope_open == 0, 1, 0),
+         anomaly_count = ifelse(I_voting_envelopes_placed_in_ballot_box != I_of_which_voting_papers_taken_from_voting_envelopes | II_voting_envelopes_placed_in_ballot_box != II_of_which_voting_papers_taken_from_voting_envelopes, 1,0),
+         anomaly = ifelse(anomaly_invalid == 1 | anomaly_spelling == 1 | anomaly_count == 1, anomaly_invalid + anomaly_spelling + anomaly_count, 0)) %>% 
+  mutate(anomaly_type = case_when(
+    anomaly_invalid == 0 & anomaly_spelling == 0 & anomaly_count == 0 ~ "None",
+    anomaly_invalid == 1 & anomaly_spelling == 0 & anomaly_count == 0 ~ "Invalid Anomaly",
+    anomaly_invalid == 0 & anomaly_spelling == 1 & anomaly_count == 0 ~ "Spelling Anomaly",
+    anomaly_invalid == 0 & anomaly_spelling == 0 & anomaly_count == 1 ~ "Extraction Anomaly",
+    anomaly_invalid == 1 & anomaly_spelling == 1 & anomaly_count == 0 ~ "Invalid + Spelling Anomaly",
+    anomaly_invalid == 1 & anomaly_spelling == 0 & anomaly_count == 1 ~ "Invalid + Extraction Anomaly",
+    anomaly_invalid == 0 & anomaly_spelling == 1 & anomaly_count == 1 ~ "Extraction + Spelling Anomaly",
+    TRUE ~ "Other"
+  ))
+
+# Need x and y coordinates for point, thus convert the geometry column to sf object
+data_sf <- st_as_sf(data, wkt = "geometry")
+centroid <- st_centroid(data_sf)
+data_with_centroid <- cbind(data, st_coordinates(centroid))
+
+PL_plot_2 <- ggplot(data_with_centroid) +
+  geom_sf(fill = "white") +
+  geom_point(data = subset(data_with_centroid, anomaly > 0), aes(x = X, y = Y, color = as.factor(anomaly_type), size = as.factor(anomaly)), alpha = 0.6) +
+  theme_void() +
+  labs(title = "2015 Polish Presidential Election: anomalies in PVE",
+       subtitle = "Poland - Municipality Level",
+       caption = "Data source: PKW",
+       color = "Anomaly Type:",
+       size = "Anomaly Count:") +
+  theme(
+    plot.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10))
+
+plot(PL_plot_2)
 ```
 Anomalies are represented as points (`geom_point()`) on the map, with each point's color indicating the type of anomaly and size representing the how many anomalies types were overall detected.In this way, one can highlight areas where specific types of anomalies or their combinations were observed more frequently.
 
@@ -206,7 +330,19 @@ Notice that out of the three anomalies, the one about spelling is the "weak" one
 ## Turnout for each election round
 For the final visualization, employing `tm_shape()` function, Turnout share in the first and second round of the presidential election was plotted. We made use of the `tm_facets` specification to combine in a single plot both heatmaps.
 
-```{r, fig.align='center'}
+```{r Turnout, fig.align='center'}
+ds <- pol_pres15 %>%
+  pivot_longer(cols = c(I_turnout, II_turnout), names_to = "election", values_to = "turnout")
+
+PL_plot_3 <- tm_shape(ds) +
+  tm_fill(col = "turnout", title = "Turnout Share:", palette = "plasma" ) +
+  tm_borders(invisible()) +
+  tm_facets(by = "election", free.scales = FALSE) +
+  tm_layout(main.title = "Turnout Comparison between I and II round",
+            title.position = c("center", "top"),
+            frame = TRUE) +
+  tm_credits("Source: PKW", position = "left")
+
 PL_plot_3
 ```
 

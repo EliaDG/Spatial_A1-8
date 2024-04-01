@@ -120,10 +120,12 @@ print(adj_matrix)
 
 *Who are the most and least central agents in the network? Name, explain, and try to quantify different notions of centrality.*
 
-We quantified the in- and out-degree of centrality. The in-degree shows how many links are directed towards are node, while the out-degree shows how many links are directed from a node (to another). A node from which a link goes out to another is considered a supplier, a node which is receiving links is considered a buyer.
+We quantified the in- and out-degree of centrality as well as the eigen-centrality. The in-degree shows how many links are directed towards are node, while the out-degree shows how many links are directed from a node (to another). A node from which a link goes out to another is considered a supplier, a node which is receiving links is considered a buyer.
 The degree_table shows how many links go in and out from each node. This way we can quantify the most central buyer and supplier in our network.
 According to the table B and D have the most links directed towards them while E has none directed towards it. Hence, B and D are the most central "buyers", E the least.
 Also, A and D have the most links directed towards others while B has none directed towards others. Hence A and D are the most central "suppliers" and B the least.
+The measure of eigen-centrality depicts an agent’s centrality within a network
+# proportional to the sum of her links to other agents, weighted by their own centrality. D is the most central vertices, while E and F are the least central ones.
 
 ```{r Exercise B1.a}
 id <- cbind(1,3,2,3,0,1)
@@ -138,7 +140,11 @@ rec_g <- reciprocity(g)
 trans_g <- transitivity(g)
 
 degree_table
+
+ec <- eigen_centrality(g) %>% `$`(vector)
+ec
 ```
+
 
 *How would centrality change if you considered a row-normalized network instead?*
 
@@ -178,6 +184,7 @@ We removed agent "F" and repeated the steps from above.
 
 The most central buyer is now B alone, E still is the least central buyer.
 The most central supplier is still A and D, the least is still B.
+The vertices with the largest eigen-centrality is still D, but now only E has the smallest eigen-centrality.
 
 We also compared the reciprocity and transitivity of both networks. The reciprocity is higher with the agent F removed, which is due to the fact that the network has a higher share of reciprocated links relative to the amount of possible reciprocated links. Also, the so called clustering coefficient (Transitivity) is higher in the Network with fewer agents as there is a 10% higher probability that vertices are connected. This is especially true for a network with low reciprocity such as ours.
 
@@ -213,6 +220,9 @@ colnames(degree_table_g1) <- c("A","B","C","D","E")
 rownames(degree_table_g1) <- c("In", "Out")
 
 degree_table_g1
+
+ec_g1 <- eigen_centrality(g1) %>% `$`(vector)
+ec_g1
 
 rec_g <- reciprocity(g)
 trans_g <- transitivity(g)

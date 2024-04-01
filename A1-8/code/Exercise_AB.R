@@ -111,7 +111,14 @@ degree_table
 # B and D have the most links directed towards them while E has none directed towards it. Hence, B and D are the most central "buyers", E the least.
 # A and D have the most links directed towards others while B has none directed towards others. Hence A and D are the most central "suppliers" and B the least.
 
-##### Exercise B.2.1: How would centralities change if you considered a row-normalized network instead?
+# Eigen-centrality: the measure depicts an agent’s centrality within a network
+# proportional to the sum of her links to other agents, weighted by their own centrality.
+ec <- eigen_centrality(g) %>% `$`(vector)
+ec
+
+# D is the most central vertices, while E and F are the least central ones.
+
+##### Exercise B.2.1: How would centrality change if you considered a row-normalized network instead?
 # Compute row sums for normalization
 #adj_matrix <- as.data.frame(as.matrix(adj_matrix)) # if not working use: as.matrix()
 row_sums <- rowSums(adj_matrix, dims = 1)
@@ -168,6 +175,8 @@ round(degree_table_norm, 2)
 
 # As expected based on the slides, the out-degree of the agents are equalized to 1.
 # Also, the most central buyers are still B and D.
+
+
 
 ##### Exercise B.2.2: How would the network change if you removed or added a specific agent?
 
@@ -264,12 +273,12 @@ print(estimate_mean)
 # Another approach
 # 1. Set parameters
 lambda <- 0.4  # Parameter for the network effect
-beta <- -0.8     # Coefficient for the direct effect of X
+beta <- -1     # Coefficient for the direct effect of X
 theta <- 0.5   # Coefficient for the network-lagged effect of X
 
 # 2. Simulate data
 N <- 6  # Number of agents
-W <- adj_matrix  # Assuming adj_matrix is already defined
+W <- adj_matrix
 
 # Generate random values for the level of experience (X)
 x <- rnorm(nrow(W), 0, 1)
@@ -288,6 +297,7 @@ y <- solve(diag(N) - lambda * W, rhs)
 
 # Check the result
 print(y)
+
 
 y <- as.matrix(y)
 

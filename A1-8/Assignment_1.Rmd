@@ -116,39 +116,41 @@ For our real world example we choose level of experience as the agent characteri
 
 The linear model estimate depicts a larger negative relationship between level of experience and number of defects than we initially set (-0.8). Hence, there is a bias present.
 ```{r}
+# 1. Set parameters
+lambda <- 0.4  # Parameter for the network effect
+beta <- -0.8     # Coefficient for the direct effect of X
+theta <- 0.5   # Coefficient for the network-lagged effect of X
 
-# Assigning values to the parameters for simulation
-# number of agents
-N <- 6
+# 2. Simulate data
+N <- 6  # Number of agents
+W <- adj_matrix  # Assuming adj_matrix is already defined
 
-# coefficient of interest
-beta <- -1
+# Generate random values for the level of experience (X)
+x <- rnorm(nrow(W), 0, 1)
 
-# other parameters
-lambda <- 0.4
-gamma <- 0.8
-sigmasquared <- 1
+# Generate random errors
+errs <- rnorm(N, 0, 1)
 
-set.seed(1234)
+# Calculate the network-lagged effect of X (W %*% x)
+WX_theta <- W %*% x * theta
 
-reps <- 1000
-estimate <- vector("numeric", reps)
+# Calculate the right-hand side of the equation (λWy + Xβ + WXθ + e)
+rhs <- lambda * (W %*% y) + x * beta + WX_theta + errs
 
-for (i in 1:reps) {
-  x <- rnorm(6)
-  W <- adj_matrix
-  errs <- rnorm(N, 0, sigmasquared)
-  Wx <- W %*% x
-  S = diag(N) - lambda * W
-  y = solve(S, Wx * gamma + x * beta + errs)
-  x <- as.matrix(x)
-  y <- as.matrix(y)
-  model_1 <- lm(y ~ x)
-  estimate[i] <- coef(model_1)["x"]
-}
+# Solve for the response variable (y) using the reduced form of the equation
+y <- solve(diag(N) - lambda * W, rhs)
+
+# Check the result
+print(y)
+
+y <- as.matrix(y)
+
+model_1 <- lm(y ~ x)
+estimate[i] <- coef(model_1)["x"]
 
 estimate_mean <- mean(estimate)
 print(estimate_mean)
+
 
 ```
 

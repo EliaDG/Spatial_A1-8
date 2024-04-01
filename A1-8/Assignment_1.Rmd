@@ -16,24 +16,39 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 source("./code/__packages.R")
 load("./Workspace_AB.RData")
+load("./Workspace_C.RData")
+load("./Workspace_D.RData")
 ```
+
+\vspace{2cm}
+
+**Disclaimer:** Available [here](https://github.com/EliaDG/Spatial_A1-8.git) is the GitHub public repository we used to work on the assignment. Should you have any questions, please do not hesitate to contact: h12039313@s.wu.ac.at and robert.auerbach@s.wu.ac.at.
+
+\newpage
 
 # Exercise A
 The dependent variable `medv` shows the median value of owner-occupied homes in $1000s.
 We chose the following covariates for our linear model:
-1) `crim`: per capita crime rate by town.
-2) `zn`: proportion of residential land zoned for lots over 25,000 sq.ft.
-3) `indus`: proportion of non-retail business acres per town.
-4) `chas`: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+
+1) `crim`: per capita crime rate by town;
+
+2) `zn`: proportion of residential land zoned for lots over 25,000 sq.ft;
+
+3) `indus`: proportion of non-retail business acres per town;
+
+4) `chas`: Charles River dummy variable (= 1 if tract bounds river, 0 otherwise);
+
 5) `nox`: nitrogen oxides concentration (parts per 10 million).
 
-Task: Create a function that takes your dependent variable and the covariates as inputs,
-and return a list with:
+**Task**: Create a function that takes your dependent variable and the covariates as inputs, and return a list with:
+
 – OLS point estimates for the intercept, slope parameters, and the error variance.
+
 – Suitable test statistics with corresponding p-values for the relevant coefficients.
+
 – Intervals of the coefficients for a confidence level of 95%.
 
-```{r}
+```{r Exercise A}
 pp_pred <- function(dependent_variable, covariates) {
   data <- data.frame(dependent_variable, covariates)
   model <- lm(dependent_variable ~ ., data)
@@ -56,48 +71,109 @@ pp_pred <- function(dependent_variable, covariates) {
 
 Call the function and print list:
 
-```{r}
-result <- property_price_prediction(dependent_variable, covariates)
+```{r Apply Function}
+# Load the Boston dataset
+data(Boston)
+
+# Selecting a subset of covariates for the model
+covariates <- Boston[, 1:5]
+
+# Selecting the dependent variable: property prices
+dependent_variable <- Boston$medv
+
+result <- pp_pred(dependent_variable, covariates)
 print(result)
 ```
 
+\newpage
+
 # Exercise B
 
-Task: Come up with some network of interest, vaguely related to some real-world example
-(describe very briefly), with at least six agents and ten edges between them.
+**Task**: Come up with some network of interest, vaguely related to some real-world example (describe very briefly), with at least six agents and ten edges between them.
 
 Our real world example is one of a supply chain network where there is rarely any reciprocity: construction of airplanes. The main vertices is the firm constructing the airplane (B), where all manufactured parts end up (high in-degree, low out-degree). On the other hand, among manufactures of airplane parts little reciprocity might occur as they need specialized part to finish their own parts (D and A).
 
 The adjacency matrix in R.can be drawn as follows: 
 
-```{r}
+```{r Exercise B1}
+# Define the edges
+edges <- c("A", "B", "A", "C", "A", "D", "C", "B", "D", "A",
+           "D", "B", "D", "C", "E", "D", "E", "F", "F", "D")
+
+# Create the graph
+g <- graph(edges, directed = TRUE)
+
 plot(g, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
 
+# Get the adjacency matrix
+adj_matrix <- as_adjacency_matrix(g)
+
+
+
+# Convert the row names and column names to node labels
+rownames(adj_matrix) <- V(g)$name
+colnames(adj_matrix) <- V(g)$name
+
+# Print the adjacency matrix
 print(adj_matrix)
 ```
 
-Who are the most and least central agents in the network? Name, explain, and try
-to quantify different notions of centrality.
+*Who are the most and least central agents in the network? Name, explain, and try to quantify different notions of centrality.*
 
 We quantified the in- and out-degree of centrality. The in-degree shows how many links are directed towards are node, while the out-degree shows how many links are directed from a node (to another). A node from which a link goes out to another is considered a supplier, a node which is receiving links is considered a buyer.
 The degree_table shows how many links go in and out from each node. This way we can quantify the most central buyer and supplier in our network.
-According to the table B and D have the most links directed towards them while E has none directed towards it. Hence, B and C are the most central "buyers", E the least.
+According to the table B and D have the most links directed towards them while E has none directed towards it. Hence, B and D are the most central "buyers", E the least.
 Also, A and D have the most links directed towards others while B has none directed towards others. Hence A and D are the most central "suppliers" and B the least.
 
-```{r}
+```{r Exercise B1.a}
+id <- cbind(1,3,2,3,0,1)
+od <- cbind(3,0,1,3,2,1)
+
+degree_table <- rbind(id, od)
+
+colnames(degree_table) <- c("A","B","C","D","E","F")
+rownames(degree_table) <- c("In", "Out")
+
+rec_g <- reciprocity(g)
+trans_g <- transitivity(g)
+
 degree_table
 ```
 
-How would centrality change if you considered a row-normalized network instead?
+*How would centrality change if you considered a row-normalized network instead?*
 
-We calculate the sums of each row of the adjacency matrix and then divide the addjacency matrix by the row sums.
-Again, we compute the centrality measures of in- and out-degree. As expected (based on the slides) the out-degree of the agents are equalized to 1. Also, the most central buyers are now B and D instead of B and C. Clearly the row-normalization leads to a distortion.
+We calculate the sums of each row of the adjacency matrix and then divide the adjacency matrix by the row sums.
+Again, we compute the centrality measures of in- and out-degree. As expected (based on the slides) the out-degree of the agents are equalized to 1. The most central buyers are still B and D.
 
-```{r}
-degree_table_norm
+```{r Exercise B1.b}
+# Compute row sums for normalization
+adj_matrix <- as.data.frame(as.matrix(adj_matrix))
+row_sums <- rowSums(adj_matrix, dims = 1)
+
+# Normalize the adjacency matrix
+w <- adj_matrix / row_sums
+
+w[is.na(w)] <- 0
+
+print(round(w,2))
+
+# Degree of agents
+# Notice that sum_column and sum_row are two functions we self-defined
+id <- cbind(sum_column(w, "A"),sum_column(w, "B"),sum_column(w, "C"),
+            sum_column(w, "D"),sum_column(w, "E"),sum_column(w, "F"))
+od <- cbind(sum_row(w, "A"),sum_row(w, "B"),sum_row(w, "C"),
+            sum_row(w, "D"),sum_row(w, "E"),sum_row(w, "F"))
+
+degree_table_norm <- rbind(id, od)
+
+colnames(degree_table_norm) <- c("A","B","C","D","E","F")
+rownames(degree_table_norm) <- c("In", "Out")
+
+round(degree_table_norm,2)
 ```
 
-How would the network change if you removed or added a specific agent?
+*How would the network change if you removed or added a specific agent?*
+
 We removed agent "F" and repeated the steps from above.
 
 The most central buyer is now B alone, E still is the least central buyer.
@@ -105,58 +181,96 @@ The most central supplier is still A and D, the least is still B.
 
 We also compared the reciprocity and transitivity of both networks. The reciprocity is higher with the agent F removed, which is due to the fact that the network has a higher share of reciprocated links relative to the amount of possible reciprocated links. Also, the so called clustering coefficient (Transitivity) is higher in the Network with fewer agents as there is a 10% higher probability that vertices are connected. This is especially true for a network with low reciprocity such as ours.
 
-```{r}
+```{r Graph B2, fig.align='center', out.width="80%"}
+# Define the edges
+edges <- c("A", "B", "A", "C", "A", "D", "C", "B",
+           "D", "A", "D", "B", "D", "C", "E", "D")
+
+# Create the graph
+g1 <- graph(edges, directed = TRUE)
+
 plot(g1, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
+```
+
+
+```{r Exercise B2}
+# Get the adjacency matrix
+adj_matrix1 <- as_adjacency_matrix(g1)
+
+# Convert the row names and column names to node labels
+rownames(adj_matrix1) <- V(g1)$name
+colnames(adj_matrix1) <- V(g1)$name
+
+# Print the adjacency matrix
+print(adj_matrix1)
+
+id_g1 <- cbind(1,3,2,2,0)
+od_g1 <- cbind(3,0,1,3,1)
+
+degree_table_g1 <- rbind(id_g1, od_g1)
+
+colnames(degree_table_g1) <- c("A","B","C","D","E")
+rownames(degree_table_g1) <- c("In", "Out")
+
 degree_table_g1
-rectrans_table
+
+rec_g <- reciprocity(g)
+trans_g <- transitivity(g)
+
+rec_g1 <- reciprocity(g1)
+trans_g1 <- transitivity(g1)
+
+rec <- cbind(rec_g,rec_g1)
+trans <- cbind(trans_g, trans_g1)
+
+rectrans_table <- rbind(rec, trans)
+
+colnames(rectrans_table) <- c("Network Complete","Network Removed")
+rownames(rectrans_table) <- c("Reciprocity", "Transivity")
+
+round(rectrans_table,2)
 ```
 
-Simulating some agent characteristic:
-For our real world example we choose level of experience as the agent characteristic and number of defects as the response variable. The coefficient beta we choose to be -0.8 indicating that more experience leads to less defects. We assign some values to the other parameters gamma, lamda and sigma^2 as indicated in the code.
+Simulating some agent characteristic: for our real world example we choose level of experience as the agent characteristic and number of defects as the response variable. The coefficient beta we choose to be -0.8 indicating that more experience leads to less defects. We assign some values to the other parameters gamma, lambda and sigma^2 as indicated in the code.
 
-The linear model estimate depicts a larger negative relationship between level of experience and number of defects than we initially set (-0.8). Hence, there is a bias present.
-```{r}
-# 1. Set parameters
-lambda <- 0.4  # Parameter for the network effect
-beta <- -0.8     # Coefficient for the direct effect of X
-theta <- 0.5   # Coefficient for the network-lagged effect of X
+```{r Exercise B3}
+# Assigning values for simulation:
+# For replicability
+set.seed(1234)
 
-# 2. Simulate data
-N <- 6  # Number of agents
-W <- adj_matrix  # Assuming adj_matrix is already defined
+# Number of agents
+N <- 6
 
-# Generate random values for the level of experience (X)
-x <- rnorm(nrow(W), 0, 1)
+# Coefficient of interest
+beta <- -0.8
 
-# Generate random errors
-errs <- rnorm(N, 0, 1)
+# Other parameters
+lambda <- 0.4
+gamma <- 0.8
+sigmasquared <- 1
 
-# Calculate the network-lagged effect of X (W %*% x)
-WX_theta <- W %*% x * theta
+reps <- 1000
+estimate <- vector("numeric", reps)
 
-# Calculate the right-hand side of the equation (λWy + Xβ + WXθ + e)
-rhs <- lambda * (W %*% y) + x * beta + WX_theta + errs
+# for (i in 1:reps) {
+#   x <- rnorm(6)
+#   W <- adj_matrix
+#   errs <- rnorm(N, 0, sigmasquared)
+#   Wx <- W %*% x
+#   S = diag(N) - lambda * W
+#   y = solve(S, Wx * gamma + x * beta + errs)
+#   x <- as.matrix(x)
+#   y <- as.matrix(y)
+#   model_1 <- lm(y ~ x)
+#   estimate[i] <- coef(model_1)["x"]
+# }
+# estimate_mean <- mean(estimate)
 
-# Solve for the response variable (y) using the reduced form of the equation
-y <- solve(diag(N) - lambda * W, rhs)
-
-# Check the result
-print(y)
-
-y <- as.matrix(y)
-
-model_1 <- lm(y ~ x)
-estimate[i] <- coef(model_1)["x"]
-
-estimate_mean <- mean(estimate)
 print(estimate_mean)
-
-
 ```
-
+The linear model estimate depicts a larger negative relationship between level of experience and number of defects than we initially set (-0.8). Hence, there is a bias present.
 
 \newpage
-
 
 # Exercise C
 In this exercise, we will work with spatial projections of Europe's NUTS-2 regions. Europe counts 331 subregions, however we excluded overseas territories and focused on the main continental area to improve the final visualization.
@@ -215,9 +329,10 @@ data_nightstay <- get_eurostat("tgs00111",
          TURIST = factor(ifelse(DOM_SHARE > 0.5, 0, 1), levels = c(1, 0),
                          labels = c("Foreign Tourist", "Domestic Tourist")))
 ```
+
 By plotting the latter variable, we were able to group together regions based on whether the majority of overnight stays in hotels were by domestic tourists or foreign tourists.
 
-```{r Distribution of Tourist Overnight-Stay by Origin, width = "80%", fig.align='center'}
+```{r Distribution of Tourist Overnight-Stay by Origin, out.width = "80%", fig.align='center'}
 EU_plot_2 <- ggplot(data_nightstay) +
   geom_sf(aes(fill = TURIST, geometry = geometry)) +
   theme_map() +
@@ -231,6 +346,7 @@ EU_plot_2 <- ggplot(data_nightstay) +
 
 plot(EU_plot_2)
 ```
+
 Not surprisingly, these were the regions with the most famous "Instagrammable" destinations such as:
 
 - Italy: Venice, Milan, Florence, or Rome,
@@ -238,6 +354,8 @@ Not surprisingly, these were the regions with the most famous "Instagrammable" d
 - Spain: Barcelona and the Balearic Islands,
 
 - France: Paris,
+
+- Croatia's coast,
 
 - Austria: ski hubs in the Alpine regions and Vienna,
 
@@ -249,7 +367,7 @@ Overall, the plot conveys a picture of the main touristic hotspots of Europe whe
 
 The plot for the continuous scale variable focused on the domestic dimension of tourism and represented the share of domestic tourist overnight stays in different European regions.
 
-```{r Distribution of Domestic Tourist Overnight-stay, width = "80%", fig.align='center'}
+```{r Distribution of Domestic Tourist Overnight-stay, out.width = "80%", fig.align='center'}
 EU_plot_3 <- ggplot(data_nightstay) +
   geom_sf(aes(fill = DOM_SHARE, geometry = geometry)) +
   theme_map() +
@@ -291,6 +409,7 @@ ggsave("EU_plot_2.svg", plot = EU_plot_2, path = "./plot", device = "svg",
 ggsave("EU_plot_3.svg", plot = EU_plot_3, path = "./plot", device = "svg", 
        width = 30, height = 15, units = "cm")
 ```
+
 \newpage
 
 # Exercise D
@@ -333,7 +452,6 @@ Three types of anomalies are identified:
 - `anomaly_spelling`: Identifies anomalies related to discrepancies in the number of invalid voting papers and specific errors on postal voting envelopes, such as missing declarations, signatures, voting envelopes, or signs of envelope opening.
 
 - `anomaly_count`: Detects anomalies in the count of voting envelopes placed in the ballot box versus the number of voting papers taken from envelopes in either round of voting.
-
 
 ```{r Anomalies PVE, fig.align='center'}
 data <- pol_pres15 %>%
@@ -383,6 +501,7 @@ PL_plot_2 <- ggplot(data_with_centroid) +
 
 plot(PL_plot_2)
 ```
+
 Anomalies are represented as points `geom_point()` on the map, with each point's color indicating the type of anomaly and size representing the how many anomalies types were overall detected.In this way, one can highlight areas where specific types of anomalies or their combinations were observed more frequently.
 
 By visually exploring anomalies in the handling of voting materials, it appears that this was a widespread problem, involving several municipalities. The majority of anomalies seems to have happened in the center-south part of the country which was where Duda won, as highlighted by the previous plot. 
@@ -410,8 +529,9 @@ PL_plot_3
 
 Overall, it appears that in the second round there was a higher public involvement. In rural areas this was less stronger than in the more condensed urban areas, where participation peaked as far as reaching almost 80%.
 
+\newpage
+
 # Additional
 ```{r}
 sessionInfo()
 ```
-

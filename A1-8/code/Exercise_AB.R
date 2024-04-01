@@ -24,7 +24,7 @@ covariates <- Boston[, 1:5]
 dependent_variable <- Boston$medv
 
 # Create the function for property price prediction
-property_price_prediction <- function(dependent_variable, covariates) {
+pp_pred <- function(dependent_variable, covariates) {
   # Combine the dependent variable and covariates into a data frame
   data <- data.frame(dependent_variable, covariates)
   
@@ -60,7 +60,7 @@ property_price_prediction <- function(dependent_variable, covariates) {
 }
 
 # Call the property_price_prediction function
-result <- property_price_prediction(dependent_variable, covariates)
+result <- pp_pred(dependent_variable, covariates)
 print(result)
 
 #---------------------------------------------------------------------------------------------------------------------
@@ -77,8 +77,6 @@ plot(g, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
 
 # Get the adjacency matrix
 adj_matrix <- as_adjacency_matrix(g)
-
-
 
 # Convert the row names and column names to node labels
 rownames(adj_matrix) <- V(g)$name
@@ -110,14 +108,12 @@ trans_g <- transitivity(g)
 
 degree_table
 
-# B and C have the most links directed towards them while E has none directed towards it. Hence, B and C are the most central "buyers", E the least.
-# A and C have the most links directed towards others while B has none directed towards others. Hence A and C are the most central "suppliers" and B the least.
-
-
+# B and D have the most links directed towards them while E has none directed towards it. Hence, B and D are the most central "buyers", E the least.
+# A and D have the most links directed towards others while B has none directed towards others. Hence A and D are the most central "suppliers" and B the least.
 
 ##### Exercise B.2.1: How would centralities change if you considered a row-normalized network instead?
 # Compute row sums for normalization
-adj_matrix <- as.data.frame(adj_matrix) # if not working use: as.matrix()
+#adj_matrix <- as.data.frame(as.matrix(adj_matrix)) # if not working use: as.matrix()
 row_sums <- rowSums(adj_matrix, dims = 1)
 
 # Normalize the adjacency matrix
@@ -125,7 +121,7 @@ w <- adj_matrix / row_sums
 
 w[is.na(w)] <- 0
 
-print(w)
+print(round(w,2))
 
 # Degree of agents
 # Define a function to calculate the sum of a specified column
@@ -163,17 +159,15 @@ sum_row <- function(matrix_data, row_name) {
 id <- cbind(sum_column(w, "A"),sum_column(w, "B"),sum_column(w, "C"),sum_column(w, "D"),sum_column(w, "E"),sum_column(w, "F"))
 od <- cbind(sum_row(w, "A"),sum_row(w, "B"),sum_row(w, "C"),sum_row(w, "D"),sum_row(w, "E"),sum_row(w, "F"))
 
-
 degree_table_norm <- rbind(id, od)
 
 colnames(degree_table_norm) <- c("A","B","C","D","E","F")
 rownames(degree_table_norm) <- c("In", "Out")
 
-degree_table_norm
+round(degree_table_norm, 2)
 
 # As expected based on the slides, the out-degree of the agents are equalized to 1.
-# Also, the most central buyers are now B and D instead of B and C. Clearly the row-normalization leads to a distortion.
-# is it possible to have a degree > 1?
+# Also, the most central buyers are still B and D.
 
 ##### Exercise B.2.2: How would the network change if you removed or added a specific agent?
 
@@ -186,14 +180,14 @@ g1 <- graph(edges, directed = TRUE)
 plot(g1, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
 
 # Get the adjacency matrix
-adj_matrix <- as_adjacency_matrix(g1)
+adj_matrix1 <- as_adjacency_matrix(g1)
 
 # Convert the row names and column names to node labels
-rownames(adj_matrix) <- V(g1)$name
-colnames(adj_matrix) <- V(g1)$name
+rownames(adj_matrix1) <- V(g1)$name
+colnames(adj_matrix1) <- V(g1)$name
 
 # Print the adjacency matrix
-print(adj_matrix)
+print(adj_matrix1)
 
 id_g1 <- cbind(1,3,2,2,0)
 od_g1 <- cbind(3,0,1,3,1)
@@ -208,8 +202,6 @@ degree_table_g1
 rec_g <- reciprocity(g)
 trans_g <- transitivity(g)
 
-?transitivity
-
 rec_g1 <- reciprocity(g1)
 trans_g1 <- transitivity(g1)
 
@@ -221,7 +213,7 @@ rectrans_table <- rbind(rec, trans)
 colnames(rectrans_table) <- c("Network Complete","Network Removed")
 rownames(rectrans_table) <- c("Reciprocity", "Transivity")
 
-rectrans_table
+round(rectrans_table,2)
 
 ##### continue here with analysis from above and how reciprocity changes
 
@@ -232,19 +224,20 @@ rectrans_table
 # that more experience leads to less defects. We assign some values to the other parameters gamma, lamda
 # and sigma^2 as indicated in the code.
 
-# Assigning values to the parameters for simulation
-# number of agents
+# Assigning values for simulation:
+# For replicability
+set.seed(1234)
+
+# Number of agents
 N <- 6
 
-# coefficient of interest
-beta <- -1
+# Coefficient of interest
+beta <- -0.8
 
-# other parameters
+# Other parameters
 lambda <- 0.4
 gamma <- 0.8
 sigmasquared <- 1
-
-set.seed(1234)
 
 reps <- 1000
 estimate <- vector("numeric", reps)
@@ -267,7 +260,6 @@ print(estimate_mean)
 
 # The liner-in-means model estimate depicts a larger negative relationship between level of experience
 # and number of defects than we initially set (-0.8). Hence, there is a bias present.
-
 
 # Another approach
 # 1. Set parameters

@@ -44,7 +44,7 @@ PL_plot_1 <- ggplot(df) +
 
 ## 2.D) ------------------------------------------------------------------------
 data <- pol_pres15 %>%
-  select(1,4,6, 13:19,21,22, 44:50,52,53) %>% # just to better visualize the relevant columns
+  #select(1,4,6, 13:19,21,22, 44:50,52,53) %>% # just to better visualize the relevant columns
   mutate(anomaly_invalid = ifelse(I_invalid_voting_papers > I_postal_voting_envelopes_received | II_invalid_voting_papers > II_postal_voting_envelopes_received, 1, 0),
          anomaly_spelling = ifelse(I_invalid_voting_papers > 0 & I_PVE_of_which_no_declaration == 0 & I_PVE_of_which_no_signature == 0 & I_PVE_of_which_no_voting_envelope == 0 & I_PVE_of_which_voting_envelope_open == 0 |
                                      II_invalid_voting_papers > 0 & II_PVE_of_which_no_declaration == 0 & II_PVE_of_which_no_signature == 0 & II_PVE_of_which_no_voting_envelope == 0 & II_PVE_of_which_voting_envelope_open == 0, 1, 0),

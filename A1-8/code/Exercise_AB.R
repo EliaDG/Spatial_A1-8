@@ -227,78 +227,45 @@ rectrans_table
 
 
 ### Exercise B.3
-# Step 1: Generate agent characteristics from a standard normal distribution
-num_agents <- 6  # Number of agents
-agent_characteristics <- rnorm(num_agents)  # Simulate agent characteristics from a standard normal distribution
+# For our real world example we choose level of experience as the agent characteristic and
+# number of defects as the response variable. The coefficient beta we choose to be -0.8 indicating
+# that more experience leads to less defects. We assign some values to the other parameters gamma, lamda
+# and sigma^2 as indicated in the code.
 
-# Step 3: Define a linear-in-means model
-# Let's assume the response variable depends on the agent characteristics and network structure
-# Here, we'll use a simple linear model where the response variable is a linear combination of agent characteristics and network structure
-# For simplicity, let's assume the network structure affects the response as an additional additive term
+# Assigning values to the parameters for simulation
+# number of agents
+N <- 6
 
-w
+# coefficient of interest
+beta <- -1
 
+# other parameters
+lambda <- 0.4
+gamma <- 0.8
+sigmasquared <- 1
 
-resp1 <- 0.5 * agent_characteristics + 0.2 * degree(g)
-lm_model_1 <- lm(resp1 ~ agent_characteristics + degree(g))
+set.seed(1234)
 
-lm_model_1
+reps <- 1000
+estimate <- vector("numeric", reps)
 
+for (i in 1:reps) {
+  x <- rnorm(6)
+  W <- adj_matrix
+  errs <- rnorm(N, 0, sigmasquared)
+  Wx <- W %*% x
+  S = diag(N) - lambda * W
+  y = solve(S, Wx * gamma + x * beta + errs)
+  x <- as.matrix(x)
+  y <- as.matrix(y)
+  model_1 <- lm(y ~ x)
+  estimate[i] <- coef(model_1)["x"]
+}
 
-resp2 <- 0.2*agent_characteristics + 0.5*degree(g)
-lm_model_2 <- lm(resp2 ~ agent_characteristics + degree(g))
+estimate_mean <- mean(estimate)
+print(estimate_mean)
 
-lm_model_2
+# The liner-in-means model estimate depicts a larger negative relationship between level of experience
+# and number of defects than we initially set (-0.8). Hence, there is a bias present.
 
-resp3 <- 0.7 * agent_characteristics + 0.4 * degree(g)
-lm_model_3 <- lm(resp3 ~ agent_characteristics + degree(g))
-
-lm_model_3
-
-
-resp4 <- 0.9*agent_characteristics + 0.38*degree(g)
-lm_model_4 <- lm(resp4 ~ agent_characteristics + degree(g))
-
-lm_model_4
-
-
-
-
-
-###
-# Compute centrality measures
-degree_centralities <- degree(g)
-betweenness_centralities <- betweenness(g)
-closeness_centralities <- closeness(g)
-
-# Combine centrality measures into a data frame
-centrality_data <- data.frame(
-  "Node" = V(g)$name,
-  "Degree Centrality" = degree_centralities,
-  "Betweenness Centrality" = betweenness_centralities,
-  "Closeness Centrality" = closeness_centralities
-)
-
-# Print the centrality data
-print(centrality_data)
-
-# Degree Centrality:
-  # - Node A and Node B have a degree centrality of 3, indicating that they are connected to 3 other nodes in the network.
-  # - Node C has a degree centrality of 4, indicating that it is connected to 4 other nodes.
-  # - Node D has the highest degree centrality of 5, indicating that it is connected to 5 other nodes.
-  # - Node E has a degree centrality of 3, similar to Nodes A and B.
-  # - Node F has the lowest degree centrality of 2, indicating that it is connected to only 2 other nodes.
-
-# Betweenness Centrality:
-  # - Nodes A, B, and F have a betweenness centrality of 0, indicating that they lie on no shortest paths between other nodes.
-  # - Node C has a betweenness centrality of 1.0, suggesting that it lies on all shortest paths between other nodes in the network.
-  # - Node D has the highest betweenness centrality of 3.5, indicating that it lies on many shortest paths between other nodes.
-  # - Node E has a betweenness centrality of 0.5, indicating that it lies on fewer shortest paths compared to Node D but more than Nodes A, B, and F.
-
-# Closeness Centrality:
-  # - Nodes A, B, and F have the lowest closeness centrality values, indicating that they are relatively far from other nodes in terms of geodesic distance.
-  # - Node C has a higher closeness centrality compared to Nodes A, B, and F, but lower compared to Nodes D and E.
-  # - Node D has the highest closeness centrality, suggesting that it is relatively close to other nodes in the network.
-  # - Node E has a closeness centrality similar to Nodes A, B, and F, but lower than Node D.
-
-#save.image("Workspace_AB.RData")
+save.image("Workspace_AB.RData")

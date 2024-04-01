@@ -110,6 +110,49 @@ plot(g1, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
 degree_table_g1
 rectrans_table
 ```
+
+Simulating some agent characteristic:
+For our real world example we choose level of experience as the agent characteristic and number of defects as the response variable. The coefficient beta we choose to be -0.8 indicating that more experience leads to less defects. We assign some values to the other parameters gamma, lamda and sigma^2 as indicated in the code.
+
+The linear model estimate depicts a larger negative relationship between level of experience and number of defects than we initially set (-0.8). Hence, there is a bias present.
+```{r}
+
+# Assigning values to the parameters for simulation
+# number of agents
+N <- 6
+
+# coefficient of interest
+beta <- -1
+
+# other parameters
+lambda <- 0.4
+gamma <- 0.8
+sigmasquared <- 1
+
+set.seed(1234)
+
+reps <- 1000
+estimate <- vector("numeric", reps)
+
+for (i in 1:reps) {
+  x <- rnorm(6)
+  W <- adj_matrix
+  errs <- rnorm(N, 0, sigmasquared)
+  Wx <- W %*% x
+  S = diag(N) - lambda * W
+  y = solve(S, Wx * gamma + x * beta + errs)
+  x <- as.matrix(x)
+  y <- as.matrix(y)
+  model_1 <- lm(y ~ x)
+  estimate[i] <- coef(model_1)["x"]
+}
+
+estimate_mean <- mean(estimate)
+print(estimate_mean)
+
+```
+
+
 \newpage
 
 

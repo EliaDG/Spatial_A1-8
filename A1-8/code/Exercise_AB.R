@@ -11,7 +11,7 @@ getwd()
 
 source("./code/__packages.R")
 
-# Exercise A
+# Exercise A -------------------------------------------------------------------
 
 # Load the Boston dataset
 data(Boston)
@@ -63,9 +63,9 @@ pp_pred <- function(dependent_variable, covariates) {
 result <- pp_pred(dependent_variable, covariates)
 print(result)
 
-#---------------------------------------------------------------------------------------------------------------------
+# Exercise B -------------------------------------------------------------------
 
-# Exercise B.1
+## B.1 --------------------------------------------------------------------------
 
 # Define the edges
 edges <- c("A", "B", "A", "C", "A", "D", "C", "B", "D", "A", "D", "B", "D", "C", "E", "D", "E", "F", "F", "D")
@@ -91,9 +91,8 @@ print(adj_matrix)
 # finish their own parts (D and A).
 reciprocity(g)
 
-#---------------------------------------------------------------------------------------------------------------------
+## B.2 ---------------------------------------------------------------------------------------------------------------------
 
-# Exercise B.2
 # Degree of agents
 id <- cbind(1,3,2,3,0,1)
 od <- cbind(3,0,1,3,2,1)
@@ -114,13 +113,12 @@ degree_table
 # Eigen-centrality: the measure depicts an agent’s centrality within a network
 # proportional to the sum of her links to other agents, weighted by their own centrality.
 ec <- eigen_centrality(g) %>% `$`(vector)
-ec
+print(round(ec,2))
 
 # D is the most central vertices, while E and F are the least central ones.
 
 ##### Exercise B.2.1: How would centrality change if you considered a row-normalized network instead?
 # Compute row sums for normalization
-#adj_matrix <- as.data.frame(as.matrix(adj_matrix)) # if not working use: as.matrix()
 row_sums <- rowSums(adj_matrix, dims = 1)
 
 # Normalize the adjacency matrix
@@ -162,7 +160,6 @@ sum_row <- function(matrix_data, row_name) {
   return(row_sum)
 }
 
-
 id <- cbind(sum_column(w, "A"),sum_column(w, "B"),sum_column(w, "C"),sum_column(w, "D"),sum_column(w, "E"),sum_column(w, "F"))
 od <- cbind(sum_row(w, "A"),sum_row(w, "B"),sum_row(w, "C"),sum_row(w, "D"),sum_row(w, "E"),sum_row(w, "F"))
 
@@ -175,8 +172,6 @@ round(degree_table_norm, 2)
 
 # As expected based on the slides, the out-degree of the agents are equalized to 1.
 # Also, the most central buyers are still B and D.
-
-
 
 ##### Exercise B.2.2: How would the network change if you removed or added a specific agent?
 
@@ -224,18 +219,15 @@ rownames(rectrans_table) <- c("Reciprocity", "Transivity")
 
 round(rectrans_table,2)
 
-##### continue here with analysis from above and how reciprocity changes
-
-
-### Exercise B.3
+## B.3 -------------------------------------------------------------------------
 # For our real world example we choose level of experience as the agent characteristic and
 # number of defects as the response variable. The coefficient beta we choose to be -0.8 indicating
 # that more experience leads to less defects. We assign some values to the other parameters gamma, lamda
 # and sigma^2 as indicated in the code.
 
 # Assigning values for simulation:
-# For replicability
-set.seed(1234)
+
+set.seed(1105) # for replicability
 
 # Parameters
 lambda <- 0.4  # Parameter for the network effect
@@ -249,21 +241,34 @@ estimate <- vector("numeric", reps)
 for (i in 1:reps) {
   x <- rnorm(6)
   W <- adj_matrix
-  errs <- rnorm(N, 0, 1)
+  e <- rnorm(6, 0, 1)
+  Wx <- W %*% x
+  S = diag(6) - lambda * W
+  y = solve(S, Wx * gamma + x * beta + e)
+  x <- as.matrix(x)
+  y <- as.matrix(y)
+  model_1 <- lm(y ~ x)
+  estimate[i] <- coef(model_1)["x"]
+}
+estimate_mean <- mean(estimate)
+
+print(round(estimate_mean,2))
+
+for (i in 1:reps) {
+  x <- rnorm(6)
+  W <- adj_matrix
+  e <- rnorm(6, 0, 1)
   Wx <- W %*% x %*% theta
-  S = diag(N) - lambda * W
-  y = solve(S, Wx * gamma + x * beta + errs)
+  S = diag(6) - lambda * W
+  y = solve(S, Wx * gamma + x * beta + e)
   x <- as.matrix(x)
   y <- as.matrix(y)
   model_1 <- lm(y ~ x)
   estimate[i] <- coef(model_1)["x"]
 }
 
-estimate_mean <- mean(estimate)
-print(estimate_mean)
+estimate_mean_new <- mean(estimate)
+print(round(estimate_mean_new,2))
 
-# The liner-in-means model estimate depicts a larger negative relationship between level of experience
-# and number of defects than we initially set (-0.8). Hence, there is a bias present.
+#save.image("Workspace_AB.RData")
 
-
-save.image("Workspace_AB.RData")

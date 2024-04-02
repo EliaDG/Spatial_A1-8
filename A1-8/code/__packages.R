@@ -15,6 +15,8 @@ p_load("tidyverse",
        "ggrepel",
        "spDataLarge",
        "MASS",
+       "Matrix",
+       "glmnet",
        "igraph",
        "svglite",
        "rsvg")

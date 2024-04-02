@@ -15,9 +15,9 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 
 source("./code/__packages.R")
-load("./Workspace_AB.RData")
 load("./Workspace_C.RData")
 load("./Workspace_D.RData")
+load("./Workspace_AB.RData")
 ```
 
 \vspace{2cm}
@@ -27,8 +27,7 @@ load("./Workspace_D.RData")
 \newpage
 
 # Exercise A
-The dependent variable `medv` shows the median value of owner-occupied homes in $1000s.
-We chose the following covariates for our linear model:
+The dependent variable `medv` shows the median value of owner-occupied homes in $1000s. We chose the following covariates for our linear model:
 
 1) `crim`: per capita crime rate by town;
 
@@ -49,14 +48,31 @@ We chose the following covariates for our linear model:
 – Intervals of the coefficients for a confidence level of 95%.
 
 ```{r Exercise A}
+# Function to predict property price step-by-step:
 pp_pred <- function(dependent_variable, covariates) {
+  
+  # Combine the dependent variable and covariates into a data frame
   data <- data.frame(dependent_variable, covariates)
+  
+  # Perform OLS regression
   model <- lm(dependent_variable ~ ., data)
+  
+  # Extract coefficients
   coefficients <- coef(model)
+  
+  # Extract standard errors of coefficients
   se <- summary(model)$coefficients[, "Std. Error"]
+  
+  # Calculate t-values
   t_values <- coefficients / se
+  
+  # Calculate p-values
   p_values <- 2 * pt(abs(t_values), df = df.residual(model), lower.tail = FALSE)
+  
+  # Calculate 95% confidence intervals
   conf_int <- confint.default(model)
+  
+  # Store results in a data frame
   results <- data.frame(
     "Coefficients" = coefficients,
     "Standard Errors" = se,
@@ -64,7 +80,6 @@ pp_pred <- function(dependent_variable, covariates) {
     "p-values" = p_values,
     "Confidence Intervals (95%)" = conf_int
   )
-  
   return(results)
 }
 ```
@@ -93,7 +108,7 @@ print(result)
 
 Our real world example is one of a supply chain network where there is rarely any reciprocity: construction of airplanes. The main vertices is the firm constructing the airplane (B), where all manufactured parts end up (high in-degree, low out-degree). On the other hand, among manufactures of airplane parts little reciprocity might occur as they need specialized part to finish their own parts (D and A).
 
-The adjacency matrix in R.can be drawn as follows: 
+The adjacency matrix in R can be drawn as follows: 
 
 ```{r Exercise B1}
 # Define the edges
@@ -102,13 +117,14 @@ edges <- c("A", "B", "A", "C", "A", "D", "C", "B", "D", "A",
 
 # Create the graph
 g <- graph(edges, directed = TRUE)
-
 plot(g, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
+```
 
+Printing the adjacency matrix allows us to visualize the graph's structure in a tabular format, making it easier to analyze and understand the connections between vertices. 
+
+```{r Adjacency Matrix,  fig.align='center', out.width="80%"}
 # Get the adjacency matrix
 adj_matrix <- as_adjacency_matrix(g)
-
-
 
 # Convert the row names and column names to node labels
 rownames(adj_matrix) <- V(g)$name
@@ -121,13 +137,12 @@ print(adj_matrix)
 *Who are the most and least central agents in the network? Name, explain, and try to quantify different notions of centrality.*
 
 We quantified the in- and out-degree of centrality as well as the eigen-centrality. The in-degree shows how many links are directed towards are node, while the out-degree shows how many links are directed from a node (to another). A node from which a link goes out to another is considered a supplier, a node which is receiving links is considered a buyer.
-The degree_table shows how many links go in and out from each node. This way we can quantify the most central buyer and supplier in our network.
-According to the table B and D have the most links directed towards them while E has none directed towards it. Hence, B and D are the most central "buyers", E the least.
-Also, A and D have the most links directed towards others while B has none directed towards others. Hence A and D are the most central "suppliers" and B the least.
-The measure of eigen-centrality depicts an agent’s centrality within a network
-# proportional to the sum of her links to other agents, weighted by their own centrality. D is the most central vertices, while E and F are the least central ones.
+
+The degree_table shows how many links go in and out from each node. This way we can quantify the most central buyer and supplier in our network. 
+According to `degree_table` B and D have the most links directed towards them while E has none directed towards it. Hence, B and D are the most central "buyers", E the least. Also, A and D have the most links directed towards others while B has none directed towards others. Hence A and D are the most central "suppliers" and B the least.
 
 ```{r Exercise B1.a}
+#Degree Table
 id <- cbind(1,3,2,3,0,1)
 od <- cbind(3,0,1,3,2,1)
 
@@ -136,13 +151,15 @@ degree_table <- rbind(id, od)
 colnames(degree_table) <- c("A","B","C","D","E","F")
 rownames(degree_table) <- c("In", "Out")
 
-rec_g <- reciprocity(g)
-trans_g <- transitivity(g)
+print(degree_table)
+```
 
-degree_table
+The measure of eigen-centrality depicts an agent’s centrality within a network proportional to the sum of her links to other agents, weighted by their own centrality. D is the most central vertices, while E and F are the least central ones.
 
+```{r}
+# Eigen-vector Centrality
 ec <- eigen_centrality(g) %>% `$`(vector)
-ec
+print(round(ec,2))
 ```
 
 
@@ -153,7 +170,7 @@ Again, we compute the centrality measures of in- and out-degree. As expected (ba
 
 ```{r Exercise B1.b}
 # Compute row sums for normalization
-adj_matrix <- as.data.frame(as.matrix(adj_matrix))
+#adj_matrix <- as.data.frame(as.matrix(adj_matrix))
 row_sums <- rowSums(adj_matrix, dims = 1)
 
 # Normalize the adjacency matrix
@@ -182,23 +199,17 @@ round(degree_table_norm,2)
 
 We removed agent "F" and repeated the steps from above.
 
-The most central buyer is now B alone, E still is the least central buyer.
-The most central supplier is still A and D, the least is still B.
-The vertices with the largest eigen-centrality is still D, but now only E has the smallest eigen-centrality.
-
-We also compared the reciprocity and transitivity of both networks. The reciprocity is higher with the agent F removed, which is due to the fact that the network has a higher share of reciprocated links relative to the amount of possible reciprocated links. Also, the so called clustering coefficient (Transitivity) is higher in the Network with fewer agents as there is a 10% higher probability that vertices are connected. This is especially true for a network with low reciprocity such as ours.
-
 ```{r Graph B2, fig.align='center', out.width="80%"}
-# Define the edges
+# Re-Define the edges
 edges <- c("A", "B", "A", "C", "A", "D", "C", "B",
            "D", "A", "D", "B", "D", "C", "E", "D")
 
-# Create the graph
+# Re-Create the graph
 g1 <- graph(edges, directed = TRUE)
-
 plot(g1, edge.arrow.size = 0.5, vertex.label.cex = 1.5, vertex.size = 30)
 ```
 
+The most central buyer is now B alone, E still is the least central buyer. The most central supplier is still A and D, the least is still B.
 
 ```{r Exercise B2}
 # Get the adjacency matrix
@@ -219,11 +230,19 @@ degree_table_g1 <- rbind(id_g1, od_g1)
 colnames(degree_table_g1) <- c("A","B","C","D","E")
 rownames(degree_table_g1) <- c("In", "Out")
 
-degree_table_g1
+print(degree_table_g1)
+```
 
+The vertices with the largest eigen-centrality is still D, but now only E has the smallest eigen-centrality.
+
+```{r}
 ec_g1 <- eigen_centrality(g1) %>% `$`(vector)
-ec_g1
+print(round(ec_g1,2))
+```
 
+For a better comparison of the Reciprocity and Transitivity measures we can observe the following table:
+
+```{r}
 rec_g <- reciprocity(g)
 trans_g <- transitivity(g)
 
@@ -241,44 +260,59 @@ rownames(rectrans_table) <- c("Reciprocity", "Transivity")
 round(rectrans_table,2)
 ```
 
-Simulating some agent characteristic: for our real world example we choose level of experience as the agent characteristic and number of defects as the response variable. The coefficient beta we choose to be -0.8 indicating that more experience leads to less defects. We assign some values to the other parameters gamma, lambda and sigma^2 as indicated in the code.
+The increase in reciprocity after removing a specific agent suggests that this agent might have had connections that were not reciprocated before its removal. As a result the network has now a higher share of reciprocated links relative to the amount of possible reciprocated links
+
+The increase in clustering coefficient, measured by transitivity, indicates that this agent might have been a bridge between different clusters or groups in the network, but these connections were not necessarily reciprocated. By removing this agent, there is a 10% higher probability that vertices are connected. This is especially true for a network with low reciprocity such as ours.
+
+**Task**: for our real world example simulating some agent characteristic, we choose level of experience as the agent characteristic and number of defects as the response variable. The coefficient beta we choose to be -0.8 indicating that more experience leads to less defects. We assign some values to the other parameters gamma, lambda and sigma squared as indicated in the code.
 
 ```{r Exercise B3}
 # Assigning values for simulation:
-# For replicability
-set.seed(1234)
+set.seed(1105) # for replicability
 
-# Number of agents
-N <- 6
-
-# Coefficient of interest
-beta <- -0.8
-
-# Other parameters
-lambda <- 0.4
+# Parameters
+lambda <- 0.4  # Parameter for the network effect
+beta <- -1     # Coefficient for the direct effect of X
+theta <- 0.5   # Coefficient for the network-lagged effect of X
 gamma <- 0.8
-sigmasquared <- 1
 
 reps <- 1000
 estimate <- vector("numeric", reps)
 
-# for (i in 1:reps) {
-#   x <- rnorm(6)
-#   W <- adj_matrix
-#   errs <- rnorm(N, 0, sigmasquared)
-#   Wx <- W %*% x
-#   S = diag(N) - lambda * W
-#   y = solve(S, Wx * gamma + x * beta + errs)
-#   x <- as.matrix(x)
-#   y <- as.matrix(y)
-#   model_1 <- lm(y ~ x)
-#   estimate[i] <- coef(model_1)["x"]
-# }
-# estimate_mean <- mean(estimate)
+for (i in 1:reps) {
+  x <- rnorm(6)
+  W <- adj_matrix
+  e <- rnorm(6, 0, 1)
+  Wx <- W %*% x
+  S = diag(6) - lambda * W
+  y = solve(S, Wx * gamma + x * beta + e)
+  x <- as.matrix(x)
+  y <- as.matrix(y)
+  model_1 <- lm(y ~ x)
+  estimate[i] <- coef(model_1)["x"]
+}
+estimate_mean <- mean(estimate)
 
-print(estimate_mean)
+print(round(estimate_mean,2))
+
+for (i in 1:reps) {
+  x <- rnorm(6)
+  W <- adj_matrix
+  e <- rnorm(6, 0, 1)
+  Wx <- W %*% x %*% theta
+  S = diag(6) - lambda * W
+  y = solve(S, Wx * gamma + x * beta + e)
+  x <- as.matrix(x)
+  y <- as.matrix(y)
+  model_1 <- lm(y ~ x)
+  estimate[i] <- coef(model_1)["x"]
+}
+
+estimate_mean_new <- mean(estimate)
+print(round(estimate_mean_new,2))
 ```
-The linear model estimate depicts a larger negative relationship between level of experience and number of defects than we initially set (-0.8). Hence, there is a bias present.
+
+The linear model estimate depicts a larger negative relationship between level of experience and number of defects than we initially set (-1). Hence, there is a negative bias present. Accounting for $\theta$, the coefficient for the network-lagged effect of X, helps overcoming this bias.
 
 \newpage
 
@@ -299,7 +333,7 @@ Europe <- get_eurostat_geospatial(
 st_crs(Europe)
 ```
 
-To use another projection and/or CRS we employed the `st_transform()` function and recurred to the Lambert Azimuthal Equal Area Projection. It preserve the relative sizes of areas on the Earth's surface. This means that areas on the map are represented accurately in relation to each other in terms of size, making it suitable for thematic mapping and spatial analysis. However it projects the Earth's surface onto a plane tangent to a specific point (the center of the projection).
+To use another projection we employed the `st_transform()` function and recurred to the Lambert Azimuthal Equal Area Projection. It preserve the relative sizes of areas on the Earth's surface. This means that areas on the map are represented accurately in relation to each other in terms of size, making it suitable for thematic mapping and spatial analysis. However it projects the Earth's surface onto a plane tangent to a specific point (the center of the projection).
 The difference in projections is highlighted by the following map:
 
 ```{r Europe Projection}
@@ -322,7 +356,7 @@ plot(EU_plot_1)
 ```
 
 ## Map and Dataset
-The dataset used was `tgs00111`: Nights spent at tourist accommodation establishments by NUTS 2 regions ([here](<https://ec.europa.eu/eurostat/cache/metadata/en/tour_occ_esms.htm) the Metadata for consultation). The dataset covers internal tourism, in other words tourism flows within the country (domestic tourism) or from abroad to destinations in the country (inbound tourism) for the year 2022. We further enhanced the dataset with two additional columns with the share of domestic and foreign tourist overnights (continuous scale), and one column for a factor variable based on the condition that if the domestic tourism share of overnight stay is greater than 50%, the tourist is labeled as "Domestic Tourist"; otherwise, they are labeled as "Foreign Tourist" (discrete scale).
+The dataset used was `tgs00111`: Nights spent at tourist accommodation establishments by NUTS-2 regions ([here](<https://ec.europa.eu/eurostat/cache/metadata/en/tour_occ_esms.htm) the Metadata for consultation). The dataset covers internal tourism, in other words tourism flows within the country (domestic tourism) or from abroad to destinations in the country (inbound tourism) for the year 2022. We further enhanced the dataset with two additional columns with the share of domestic and foreign tourist overnights (continuous scale), and one column for a factor variable based on the condition that if the domestic tourism share of overnight stay is greater than 50%, the tourist is labeled as "Domestic Tourist"; otherwise, they are labeled as "Foreign Tourist" (discrete scale).
 
 ```{r Dataset from Eurostat}
 data_nightstay <- get_eurostat("tgs00111",
@@ -340,7 +374,7 @@ data_nightstay <- get_eurostat("tgs00111",
                          labels = c("Foreign Tourist", "Domestic Tourist")))
 ```
 
-By plotting the latter variable, we were able to group together regions based on whether the majority of overnight stays in hotels were by domestic tourists or foreign tourists.
+By plotting the latter variable, we were able to group together regions based on whether the majority (>50%) of overnight stays in hotels were by domestic tourists or foreign tourists.
 
 ```{r Distribution of Tourist Overnight-Stay by Origin, out.width = "80%", fig.align='center'}
 EU_plot_2 <- ggplot(data_nightstay) +
@@ -350,7 +384,7 @@ EU_plot_2 <- ggplot(data_nightstay) +
        title = "Distribution of Tourist Overnight-Stay by Origin",
        subtitle = "Europe - NUTS2 Level",
        caption = "Source: Eurostat")+
-  guides(fill = guide_legend(title = "Tourist Type:")) +
+  guides(fill = guide_legend(title = "Majority:")) +
   theme(legend.position = "bottom",
         plot.title = element_text(face = "bold"))
 
@@ -373,7 +407,7 @@ Not surprisingly, these were the regions with the most famous "Instagrammable" d
 
 - the coastal regions of Greece and Turkey (Antalya and Bodrum).
 
-Overall, the plot conveys a picture of the main touristic hotspots of Europe where tourists from abroad mostly arrive, However it might be biased as it does not consider other touristic accommodations such as Airbnb, mostly used by young Europeans.
+Overall, the plot conveys a picture of the main touristic hotspots of Europe where tourists from abroad mostly spend the night, However it might be biased as it does not consider other touristic accommodations (e.g. Airbnb).
 
 The plot for the continuous scale variable focused on the domestic dimension of tourism and represented the share of domestic tourist overnight stays in different European regions.
 
@@ -454,6 +488,8 @@ The provided R code generates a thematic map representing the outcomes of the se
 
 The transparency of the colors also varies to reflect the degree of majority/support for the winning candidate in each municipality. Darker shades indicate a higher level of majority/support, while lighter shades represent a lower level of majority/support. This additional dimension helps visually emphasize areas where the winning candidate had a more significant lead in terms of voter share.
 
+Overall, it is possible to see that Duda won by majority in the central and southern-eastern area of the country, whereas Komorowski led the polls in the Western and Northern regions of Poland, besides the main-urban centers.
+
 ## Postal voting envelopes anomalies
 Three types of anomalies are identified:
 
@@ -514,7 +550,7 @@ plot(PL_plot_2)
 
 Anomalies are represented as points `geom_point()` on the map, with each point's color indicating the type of anomaly and size representing the how many anomalies types were overall detected.In this way, one can highlight areas where specific types of anomalies or their combinations were observed more frequently.
 
-By visually exploring anomalies in the handling of voting materials, it appears that this was a widespread problem, involving several municipalities. The majority of anomalies seems to have happened in the center-south part of the country which was where Duda won, as highlighted by the previous plot. 
+By visually exploring anomalies in the handling of voting materials, it appears that this was a widespread problem, involving several municipalities. Hoever, the majority of anomalies seems to have happened in the center-south part of the country which was where Duda won, as highlighted by the previous plot. 
 
 Notice that among the three anomalies identified, the one related to spelling relies on a specific assumption. This assumption presumes that all potential reasons for invalidity were documented in the dataset, leading to the anomaly being the higher count of invalid PVEs despite their return with a signed declaration and sealed voting envelope. However, it is crucial to consider that there may be additional, unrecorded issues contributing to this discrepancy, such as misspelling the candidate's name (reason of the variable name). Validating this assumption requires further material, information, or contextual details.
 

@@ -237,16 +237,11 @@ round(rectrans_table,2)
 # For replicability
 set.seed(1234)
 
-# Number of agents
-N <- 6
-
-# Coefficient of interest
-beta <- -0.8
-
-# Other parameters
-lambda <- 0.4
+# Parameters
+lambda <- 0.4  # Parameter for the network effect
+beta <- -1     # Coefficient for the direct effect of X
+theta <- 0.5   # Coefficient for the network-lagged effect of X
 gamma <- 0.8
-sigmasquared <- 1
 
 reps <- 1000
 estimate <- vector("numeric", reps)
@@ -254,8 +249,8 @@ estimate <- vector("numeric", reps)
 for (i in 1:reps) {
   x <- rnorm(6)
   W <- adj_matrix
-  errs <- rnorm(N, 0, sigmasquared)
-  Wx <- W %*% x
+  errs <- rnorm(N, 0, 1)
+  Wx <- W %*% x %*% theta
   S = diag(N) - lambda * W
   y = solve(S, Wx * gamma + x * beta + errs)
   x <- as.matrix(x)
@@ -270,41 +265,5 @@ print(estimate_mean)
 # The liner-in-means model estimate depicts a larger negative relationship between level of experience
 # and number of defects than we initially set (-0.8). Hence, there is a bias present.
 
-# Another approach
-# 1. Set parameters
-lambda <- 0.4  # Parameter for the network effect
-beta <- -1     # Coefficient for the direct effect of X
-theta <- 0.5   # Coefficient for the network-lagged effect of X
-
-# 2. Simulate data
-N <- 6  # Number of agents
-W <- adj_matrix
-
-# Generate random values for the level of experience (X)
-x <- rnorm(nrow(W), 0, 1)
-
-# Generate random errors
-errs <- rnorm(N, 0, 1)
-
-# Calculate the network-lagged effect of X (W %*% x)
-WX_theta <- W %*% x * theta
-
-# Calculate the right-hand side of the equation (λWy + Xβ + WXθ + e)
-rhs <- lambda * (W %*% y) + x * beta + WX_theta + errs
-
-# Solve for the response variable (y) using the reduced form of the equation
-y <- solve(diag(N) - lambda * W, rhs)
-
-# Check the result
-print(y)
-
-
-y <- as.matrix(y)
-
-model_1 <- lm(y ~ x)
-estimate[i] <- coef(model_1)["x"]
-
-estimate_mean <- mean(estimate)
-print(estimate_mean)
 
 save.image("Workspace_AB.RData")
